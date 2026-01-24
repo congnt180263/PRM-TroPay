@@ -5,6 +5,9 @@ class UserModel {
   final String? email;
   final UserRole role;
   final String? token;
+  final String? dateOfBirth;
+  final String? identityCard;
+  final String? address;
 
   UserModel({
     this.id,
@@ -13,6 +16,9 @@ class UserModel {
     this.email,
     required this.role,
     this.token,
+    this.dateOfBirth,
+    this.identityCard,
+    this.address,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +29,9 @@ class UserModel {
       email: json['email'],
       role: UserRole.fromString(json['role'] ?? 'tenant'),
       token: json['token'],
+      dateOfBirth: json['date_of_birth'] ?? json['dateOfBirth'],
+      identityCard: json['identity_card'] ?? json['identityCard'],
+      address: json['address'],
     );
   }
 
@@ -34,6 +43,9 @@ class UserModel {
       'email': email,
       'role': role.value,
       'token': token,
+      'date_of_birth': dateOfBirth,
+      'identity_card': identityCard,
+      'address': address,
     };
   }
 
@@ -44,6 +56,9 @@ class UserModel {
     String? email,
     UserRole? role,
     String? token,
+    String? dateOfBirth,
+    String? identityCard,
+    String? address,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -52,6 +67,9 @@ class UserModel {
       email: email ?? this.email,
       role: role ?? this.role,
       token: token ?? this.token,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      identityCard: identityCard ?? this.identityCard,
+      address: address ?? this.address,
     );
   }
 }
