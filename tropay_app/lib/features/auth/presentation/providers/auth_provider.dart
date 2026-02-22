@@ -1,14 +1,16 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/user_model.dart';
-import 'dart:convert';
+import '../../data/models/auth_models.dart';
+import '../../data/services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  UserModel? _currentUser;
+  final AuthService _authService = AuthService();
+
+  UserData? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
 
-  UserModel? get currentUser => _currentUser;
+  UserData? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _currentUser != null;
@@ -19,62 +21,56 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _loadUser() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString('user');
-      if (userJson != null) {
-        _currentUser = UserModel.fromJson(json.decode(userJson));
-        notifyListeners();
+      _isLoading = true;
+      notifyListeners();
+
+      // Check if user is authenticated
+      final isAuth = await _authService.isAuthenticated();
+      if (isAuth) {
+        // Try to get saved user data
+        _currentUser = await _authService.getSavedUser();
+
+        // If saved user exists, try to get fresh profile from server
+        if (_currentUser != null) {
+          try {
+            final profile = await _authService.getProfile();
+            _currentUser = UserData(
+              id: profile.id,
+              email: profile.email,
+              fullName: profile.fullName,
+              role: profile.role,
+            );
+          } catch (e) {
+            debugPrint('⚠️ Failed to fetch fresh profile: $e');
+            // Keep using saved user data
+          }
+        }
       }
+
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       debugPrint('Error loading user: $e');
-    }
-  }
-
-  Future<void> _saveUser(UserModel user) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user', json.encode(user.toJson()));
-    } catch (e) {
-      debugPrint('Error saving user: $e');
-    }
-  }
-
-  Future<void> _clearUser() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('user');
-    } catch (e) {
-      debugPrint('Error clearing user: $e');
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<bool> login({
-    required String phoneOrEmail,
+    required String email,
     required String password,
-    required UserRole role,
   }) async {
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
 
-      // TODO: Replace with actual API call when backend is ready
-      // Simulate API delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Mock success response - Replace with actual API call
-      final mockUser = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        fullName: 'User Test',
-        phone: phoneOrEmail.contains('@') ? '0123456789' : phoneOrEmail,
-        email: phoneOrEmail.contains('@') ? phoneOrEmail : null,
-        role: role,
-        token: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
+      final response = await _authService.login(
+        email: email,
+        password: password,
       );
 
-      _currentUser = mockUser;
-      await _saveUser(mockUser);
-      
+      _currentUser = response.user;
       _isLoading = false;
       notifyListeners();
       return true;
@@ -88,33 +84,23 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> register({
     required String fullName,
-    required String phone,
-    String? email,
+    required String email,
     required String password,
-    required UserRole role,
+    String? phoneNumber,
   }) async {
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
 
-      // TODO: Replace with actual API call when backend is ready
-      // Simulate API delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Mock success response - Replace with actual API call
-      final mockUser = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        fullName: fullName,
-        phone: phone,
+      final response = await _authService.register(
         email: email,
-        role: role,
-        token: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
+        password: password,
+        fullName: fullName,
+        phoneNumber: phoneNumber,
       );
 
-      _currentUser = mockUser;
-      await _saveUser(mockUser);
-      
+      _currentUser = response.user;
       _isLoading = false;
       notifyListeners();
       return true;
@@ -127,9 +113,106 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    _currentUser = null;
-    await _clearUser();
-    notifyListeners();
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _authService.logout();
+
+      _currentUser = null;
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Logout error: $e');
+      // Clear user even if logout fails
+      _currentUser = null;
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      await _authService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword({required String email}) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      await _authService.forgotPassword(email: email);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String resetToken,
+    required String newPassword,
+  }) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      await _authService.resetPassword(
+        resetToken: resetToken,
+        newPassword: newPassword,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> refreshProfile() async {
+    try {
+      final profile = await _authService.getProfile();
+      _currentUser = UserData(
+        id: profile.id,
+        email: profile.email,
+        fullName: profile.fullName,
+        role: profile.role,
+      );
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error refreshing profile: $e');
+    }
   }
 
   void clearError() {
@@ -137,3 +220,4 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 }
+

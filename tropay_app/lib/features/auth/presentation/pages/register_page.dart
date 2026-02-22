@@ -7,7 +7,7 @@ import '../widgets/primary_button.dart';
 
 class RegisterPage extends StatefulWidget {
   final UserRole role;
-  
+
   const RegisterPage({
     super.key,
     this.role = UserRole.tenant,
@@ -20,8 +20,8 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _showPassword = false;
@@ -30,8 +30,8 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _fullNameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -43,19 +43,19 @@ class _RegisterPageState extends State<RegisterPage> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.register(
       fullName: _fullNameController.text.trim(),
-      phone: _phoneController.text.trim(),
-      email: _emailController.text.trim().isNotEmpty 
-          ? _emailController.text.trim() 
-          : null,
+      email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
-      role: widget.role,
+      phoneNumber: _phoneController.text.trim().isNotEmpty
+          ? _phoneController.text.trim()
+          : null,
     );
 
     if (!mounted) return;
 
     if (success) {
-      // Navigate based on role
-      if (widget.role == UserRole.owner) {
+      // Navigate to home based on user role
+      final role = authProvider.currentUser?.role ?? 'user';
+      if (role == 'owner' || role == 'admin') {
         Navigator.pushReplacementNamed(context, '/owner-home');
       } else {
         Navigator.pushReplacementNamed(context, '/tenant-home');
@@ -113,7 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Title
                     const Text(
                       'Tạo tài khoản mới',
@@ -125,7 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Subtitle
                     Text(
                       'Đăng ký với vai trò ${widget.role.displayName}',
@@ -153,34 +153,17 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Vui lòng nhập họ và tên';
                         }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Phone Input
-                    CustomInputField(
-                      label: 'Số điện thoại',
-                      placeholder: 'Nhập số điện thoại',
-                      icon: Icons.phone_outlined,
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      maxLength: 15,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập số điện thoại';
-                        }
-                        if (value.trim().length < 10) {
-                          return 'Số điện thoại phải có ít nhất 10 chữ số';
+                        if (value.trim().length < 2) {
+                          return 'Họ và tên phải có ít nhất 2 ký tự';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Email Input
+                    // Email Input (Required)
                     CustomInputField(
-                      label: 'Email (tùy chọn)',
+                      label: 'Email',
                       placeholder: 'Nhập email',
                       icon: Icons.email_outlined,
                       controller: _emailController,
@@ -188,10 +171,30 @@ class _RegisterPageState extends State<RegisterPage> {
                       textCapitalization: TextCapitalization.none,
                       autocorrect: false,
                       validator: (value) {
-                        if (value != null && 
-                            value.trim().isNotEmpty && 
-                            !value.contains('@')) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Vui lòng nhập email';
+                        }
+                        if (!value.contains('@')) {
                           return 'Email không hợp lệ';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Phone Input (Optional)
+                    CustomInputField(
+                      label: 'Số điện thoại (tùy chọn)',
+                      placeholder: 'Nhập số điện thoại',
+                      icon: Icons.phone_outlined,
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      maxLength: 15,
+                      validator: (value) {
+                        if (value != null &&
+                            value.trim().isNotEmpty &&
+                            value.trim().length < 10) {
+                          return 'Số điện thoại phải có ít nhất 10 chữ số';
                         }
                         return null;
                       },
