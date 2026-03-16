@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../models/api_response.dart';
 import '../models/auth_models.dart';
 import '../../../../core/services/http_client_service.dart';
 import '../../../../core/services/secure_storage_service.dart';

@@ -3,26 +3,33 @@ import '../../data/models/invoice_model.dart';
 import '../../data/models/incident_model.dart';
 import '../../data/models/service_model.dart';
 import '../../data/models/contract_model.dart';
+import '../../data/services/tenant_api_service.dart';
 
 class TenantProvider with ChangeNotifier {
+  final TenantApiService _api = TenantApiService();
+
   // Dashboard data
   String _roomNumber = 'A101';
   double _totalUnpaid = 0.0;
   int _pendingIncidents = 0;
   ContractModel? _activeContract;
+  String? _dashboardError;
 
   // Invoices
   List<InvoiceModel> _invoices = [];
   bool _isLoadingInvoices = false;
+  String? _invoicesError;
 
   // Incidents
   List<IncidentModel> _incidents = [];
   bool _isLoadingIncidents = false;
+  String? _incidentsError;
 
   // Services
   List<ServiceModel> _services = [];
   List<ServiceHistoryModel> _serviceHistory = [];
   bool _isLoadingServices = false;
+  String? _servicesError;
 
   // Getters
   String get roomNumber => _roomNumber;
@@ -42,6 +49,10 @@ class TenantProvider with ChangeNotifier {
   List<ServiceModel> get services => _services;
   List<ServiceHistoryModel> get serviceHistory => _serviceHistory;
   bool get isLoadingServices => _isLoadingServices;
+  String? get dashboardError => _dashboardError;
+  String? get invoicesError => _invoicesError;
+  String? get incidentsError => _incidentsError;
+  String? get servicesError => _servicesError;
 
   // Initialize with mock data
   Future<void> initialize() async {
@@ -55,168 +66,87 @@ class TenantProvider with ChangeNotifier {
   }
 
   Future<void> loadDashboardData() async {
-    // Mock data - replace with actual API call
-    await Future.delayed(const Duration(milliseconds: 500));
-    _roomNumber = 'A101';
-    _totalUnpaid = 3500000;
-    _pendingIncidents = 2;
+    _dashboardError = null;
+    try {
+      final data = await _api.fetchDashboard();
+      final summary = data['summary'] as Map<String, dynamic>? ?? {};
+      _roomNumber = summary['roomNumber']?.toString() ?? _roomNumber;
+      _totalUnpaid = (summary['totalUnpaid'] ?? 0).toDouble();
+      _pendingIncidents = summary['pendingIncidents'] ?? 0;
+      _activeContract = _api.extractContractFromDashboard(data);
+    } catch (e) {
+      _dashboardError = e.toString();
+    }
     notifyListeners();
   }
 
   Future<void> loadInvoices() async {
     _isLoadingInvoices = true;
+    _invoicesError = null;
     notifyListeners();
 
-    // Mock data - replace with actual API call
-    await Future.delayed(const Duration(seconds: 1));
-    
-    _invoices = [
-      InvoiceModel(
-        id: '1',
-        roomNumber: 'A101',
-        month: 'Tháng 1/2026',
-        totalAmount: 3500000,
-        electricCost: 350000,
-        waterCost: 150000,
-        roomCost: 2500000,
-        serviceCost: 500000,
-        status: 'unpaid',
-        dueDate: DateTime(2026, 2, 5),
-      ),
-      InvoiceModel(
-        id: '2',
-        roomNumber: 'A101',
-        month: 'Tháng 12/2025',
-        totalAmount: 3200000,
-        electricCost: 300000,
-        waterCost: 120000,
-        roomCost: 2500000,
-        serviceCost: 280000,
-        status: 'paid',
-        dueDate: DateTime(2026, 1, 5),
-        paidDate: DateTime(2026, 1, 3),
-      ),
-    ];
-
-    _totalUnpaid = _invoices.where((i) => !i.isPaid).fold(0.0, (sum, i) => sum + i.totalAmount);
-    _isLoadingInvoices = false;
-    notifyListeners();
+    try {
+      final result = await _api.fetchInvoices(limit: 50);
+      _invoices = result.items;
+      _totalUnpaid = _invoices
+          .where((i) => !i.isPaid)
+          .fold(0.0, (sum, i) => sum + i.totalAmount);
+    } catch (e) {
+      _invoices = [];
+      _totalUnpaid = 0;
+      _invoicesError = e.toString();
+    } finally {
+      _isLoadingInvoices = false;
+      notifyListeners();
+    }
   }
 
   Future<void> loadIncidents() async {
     _isLoadingIncidents = true;
+    _incidentsError = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
-    
-    _incidents = [
-      IncidentModel(
-        id: '1',
-        title: 'Máy lạnh không hoạt động',
-        description: 'Máy lạnh trong phòng không hoạt động từ sáng nay',
-        category: 'electrical',
-        status: 'pending',
-        priority: 'high',
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      IncidentModel(
-        id: '2',
-        title: 'Vòi nước bị rò rỉ',
-        description: 'Vòi nước trong nhà tắm bị rò rỉ nhẹ',
-        category: 'plumbing',
-        status: 'in_progress',
-        priority: 'medium',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-    ];
-
-    _pendingIncidents = _incidents.where((i) => i.isPending).length;
-    _isLoadingIncidents = false;
-    notifyListeners();
+    try {
+      final result = await _api.fetchMaintenanceRequests(limit: 50);
+      _incidents = result.items;
+      _pendingIncidents = _incidents.where((i) => i.isPending).length;
+    } catch (e) {
+      _incidents = [];
+      _pendingIncidents = 0;
+      _incidentsError = e.toString();
+    } finally {
+      _isLoadingIncidents = false;
+      notifyListeners();
+    }
   }
 
   Future<void> loadServices() async {
     _isLoadingServices = true;
+    _servicesError = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 800));
-    
-    _services = [
-      ServiceModel(
-        id: '1',
-        name: 'Điện',
-        description: 'Tiền điện hàng tháng',
-        price: 3500,
-        unit: 'kwh',
-        iconName: 'electrical_services',
-      ),
-      ServiceModel(
-        id: '2',
-        name: 'Nước',
-        description: 'Tiền nước hàng tháng',
-        price: 15000,
-        unit: 'm3',
-        iconName: 'water_drop',
-      ),
-      ServiceModel(
-        id: '3',
-        name: 'Internet',
-        description: 'Wifi tốc độ cao',
-        price: 100000,
-        unit: 'month',
-        iconName: 'wifi',
-      ),
-      ServiceModel(
-        id: '4',
-        name: 'Vệ sinh',
-        description: 'Dịch vụ vệ sinh chung',
-        price: 50000,
-        unit: 'month',
-        iconName: 'cleaning_services',
-      ),
-    ];
-
-    _serviceHistory = [
-      ServiceHistoryModel(
-        id: '1',
-        serviceName: 'Điện - Tháng 12/2025',
-        amount: 300000,
-        date: DateTime(2025, 12, 31),
-        description: '100 kWh x 3,000đ',
-      ),
-      ServiceHistoryModel(
-        id: '2',
-        serviceName: 'Nước - Tháng 12/2025',
-        amount: 120000,
-        date: DateTime(2025, 12, 31),
-        description: '8 m³ x 15,000đ',
-      ),
-    ];
-
-    _isLoadingServices = false;
-    notifyListeners();
+    try {
+      await _api.fetchServiceUsage();
+      final history = await _api.fetchServiceHistory(limit: 50);
+      _serviceHistory = history.items;
+      _services = [];
+    } catch (e) {
+      _services = [];
+      _serviceHistory = [];
+      _servicesError = e.toString();
+    } finally {
+      _isLoadingServices = false;
+      notifyListeners();
+    }
   }
 
   Future<void> loadContract() async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    
-    _activeContract = ContractModel(
-      id: '1',
-      roomNumber: 'A101',
-      ownerName: 'Nguyễn Văn A',
-      tenantName: 'Trần Thị B',
-      rentPrice: 2500000,
-      deposit: 5000000,
-      startDate: DateTime(2025, 7, 1),
-      endDate: DateTime(2026, 6, 30),
-      status: 'active',
-      terms: [
-        'Thanh toán tiền thuê trước ngày 5 hàng tháng',
-        'Không nuôi thú cưng',
-        'Giữ gìn vệ sinh chung',
-        'Báo trước 1 tháng khi chấm dứt hợp đồng',
-      ],
-    );
+    try {
+      final data = await _api.fetchDashboard();
+      _activeContract = _api.extractContractFromDashboard(data);
+    } catch (e) {
+      _dashboardError = e.toString();
+    }
     notifyListeners();
   }
 
@@ -226,31 +156,51 @@ class TenantProvider with ChangeNotifier {
     required String category,
     required String priority,
   }) async {
-    final newIncident = IncidentModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: title,
-      description: description,
-      category: category,
-      status: 'pending',
-      priority: priority,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final created = await _api.createMaintenanceRequest({
+        'title': title,
+        'description': description,
+        'category': category,
+        'priority': priority,
+      });
 
-    _incidents.insert(0, newIncident);
-    _pendingIncidents = _incidents.where((i) => i.isPending).length;
+      _incidents.insert(0, created);
+      _pendingIncidents = _incidents.where((i) => i.isPending).length;
+    } catch (e) {
+      _incidentsError = e.toString();
+      rethrow;
+    }
+
     notifyListeners();
-
-    // TODO: Call API to save incident
   }
 
   Future<void> payInvoice(String invoiceId) async {
-    // TODO: Implement payment logic with MoMo integration
-    await Future.delayed(const Duration(seconds: 2));
-    
-    final index = _invoices.indexWhere((i) => i.id == invoiceId);
-    if (index != -1) {
-      // In real app, update from API response
-      notifyListeners();
+    final invoice = _invoices.firstWhere(
+      (i) => i.id == invoiceId,
+      orElse: () => InvoiceModel(
+        id: invoiceId,
+        roomNumber: '',
+        month: '',
+        totalAmount: 0,
+        electricCost: 0,
+        waterCost: 0,
+        roomCost: 0,
+        serviceCost: 0,
+        status: 'unpaid',
+        dueDate: DateTime.now(),
+      ),
+    );
+
+    try {
+      await _api.payInvoice(
+        invoiceId: invoiceId,
+        amount: invoice.totalAmount,
+        paymentMethod: 'bank_transfer',
+      );
+      await loadInvoices();
+    } catch (e) {
+      _invoicesError = e.toString();
+      rethrow;
     }
   }
 

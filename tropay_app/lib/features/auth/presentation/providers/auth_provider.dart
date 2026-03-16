@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../../data/models/user_model.dart';
 import '../../data/models/auth_models.dart';
 import '../../data/services/auth_service.dart';
 
@@ -39,6 +38,10 @@ class AuthProvider with ChangeNotifier {
               email: profile.email,
               fullName: profile.fullName,
               role: profile.role,
+              phoneNumber: profile.phoneNumber,
+              dateOfBirth: profile.dateOfBirth,
+              identityCard: profile.identityCard,
+              address: profile.address,
             );
           } catch (e) {
             debugPrint('⚠️ Failed to fetch fresh profile: $e');
@@ -208,6 +211,10 @@ class AuthProvider with ChangeNotifier {
         email: profile.email,
         fullName: profile.fullName,
         role: profile.role,
+        phoneNumber: profile.phoneNumber,
+        dateOfBirth: profile.dateOfBirth,
+        identityCard: profile.identityCard,
+        address: profile.address,
       );
       notifyListeners();
     } catch (e) {

@@ -54,7 +54,7 @@ class ProfilePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    user.role.name == 'tenant' ? 'Người thuê trọ' : 'Chủ nhà',
+                    user.role == 'tenant' ? 'Người thuê trọ' : 'Chủ nhà',
                     style: TextStyle(
                       color: Colors.blue[700],
                       fontWeight: FontWeight.w600,

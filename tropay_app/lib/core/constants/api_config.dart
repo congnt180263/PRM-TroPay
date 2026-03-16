@@ -6,13 +6,18 @@ class ApiConfig {
   // For local development: http://10.0.2.2:3000 (Android Emulator)
   // For iOS Simulator: http://localhost:3000
   // For physical device: http://YOUR_COMPUTER_IP:3000
-  static const String baseUrl = 'http://10.0.2.2:3000/api';
+  static const String baseUrl = 'http://localhost:3000/api';
 
   // API Endpoints
   static const String auth = '/auth';
   static const String users = '/users';
   static const String orders = '/orders';
   static const String payments = '/payments';
+  static const String rooms = '/rooms';
+  static const String services = '/services';
+  static const String leases = '/leases';
+  static const String invoices = '/invoices';
+  static const String tenant = '/tenant';
 
   // Auth Endpoints
   static const String register = '$auth/register';

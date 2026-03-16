@@ -28,19 +28,24 @@ class InvoiceModel {
   });
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
+    final room = json['roomId'];
+    final tenant = json['tenantId'];
+
     return InvoiceModel(
-      id: json['id'] ?? '',
-      roomNumber: json['roomNumber'] ?? '',
-      month: json['month'] ?? '',
+      id: json['id'] ?? json['_id'] ?? '',
+      roomNumber: json['roomNumber'] ?? room?['roomNumber'] ?? '',
+      month: json['month'] ?? json['periodMonth'] ?? '',
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
-      electricCost: (json['electricCost'] ?? 0).toDouble(),
-      waterCost: (json['waterCost'] ?? 0).toDouble(),
-      roomCost: (json['roomCost'] ?? 0).toDouble(),
+      electricCost: (json['electricCost'] ?? json['electricityCost'] ?? 0).toDouble(),
+      waterCost: (json['waterCost'] ?? json['waterCost'] ?? 0).toDouble(),
+      roomCost: (json['roomCost'] ?? json['roomPrice'] ?? 0).toDouble(),
       serviceCost: (json['serviceCost'] ?? 0).toDouble(),
       status: json['status'] ?? 'unpaid',
-      dueDate: DateTime.parse(json['dueDate']),
-      paidDate: json['paidDate'] != null ? DateTime.parse(json['paidDate']) : null,
-      tenantId: json['tenantId'],
+      dueDate: DateTime.parse(json['dueDate'] ?? DateTime.now().toIso8601String()),
+      paidDate: json['paidDate'] != null
+          ? DateTime.parse(json['paidDate'])
+          : (json['paidAt'] != null ? DateTime.parse(json['paidAt']) : null),
+      tenantId: json['tenantId'] ?? tenant?['_id'],
     );
   }
 

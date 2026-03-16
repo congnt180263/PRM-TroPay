@@ -26,15 +26,19 @@ class ContractModel {
   });
 
   factory ContractModel.fromJson(Map<String, dynamic> json) {
+    final room = json['roomId'];
+    final tenant = json['tenantId'];
+    final owner = json['ownerId'];
+
     return ContractModel(
-      id: json['id'] ?? '',
-      roomNumber: json['roomNumber'] ?? '',
-      ownerName: json['ownerName'] ?? '',
-      tenantName: json['tenantName'] ?? '',
-      rentPrice: (json['rentPrice'] ?? 0).toDouble(),
+      id: json['id'] ?? json['_id'] ?? '',
+      roomNumber: json['roomNumber'] ?? room?['roomNumber'] ?? '',
+      ownerName: json['ownerName'] ?? owner?['fullName'] ?? '',
+      tenantName: json['tenantName'] ?? tenant?['fullName'] ?? '',
+      rentPrice: (json['rentPrice'] ?? json['rent'] ?? 0).toDouble(),
       deposit: (json['deposit'] ?? 0).toDouble(),
-      startDate: DateTime.parse(json['startDate']),
-      endDate: DateTime.parse(json['endDate']),
+      startDate: DateTime.parse(json['startDate'] ?? DateTime.now().toIso8601String()),
+      endDate: DateTime.parse(json['endDate'] ?? DateTime.now().toIso8601String()),
       status: json['status'] ?? 'active',
       terms: List<String>.from(json['terms'] ?? []),
       documentUrl: json['documentUrl'],

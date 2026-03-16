@@ -27,13 +27,13 @@ class IncidentModel {
 
   factory IncidentModel.fromJson(Map<String, dynamic> json) {
     return IncidentModel(
-      id: json['id'] ?? '',
+      id: json['id'] ?? json['_id'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       category: json['category'] ?? 'other',
       status: json['status'] ?? 'pending',
       priority: json['priority'] ?? 'medium',
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
       resolvedAt: json['resolvedAt'] != null ? DateTime.parse(json['resolvedAt']) : null,
       imageUrl: json['imageUrl'],
       response: json['response'],

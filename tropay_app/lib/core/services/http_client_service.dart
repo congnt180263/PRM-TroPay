@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../constants/api_config.dart';
 import 'secure_storage_service.dart';
-import 'dart:convert';
 
 /// HTTP Client service with automatic token refresh
 class HttpClientService {
@@ -15,7 +14,6 @@ class HttpClientService {
   late Dio _dio;
   final SecureStorageService _storageService = SecureStorageService();
   bool _isRefreshing = false;
-  final List<Function> _requestsQueue = [];
 
   Dio get dio => _dio;
 

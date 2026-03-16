@@ -34,17 +34,19 @@ class RoomModel {
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
+    final tenant = json['currentTenantId'] ?? {};
+
     return RoomModel(
-      id: json['id'] ?? '',
+      id: json['id'] ?? json['_id'] ?? '',
       roomNumber: json['roomNumber'] ?? '',
       floor: json['floor'] ?? '',
       area: (json['area'] ?? 0).toDouble(),
       price: (json['price'] ?? 0).toDouble(),
       capacity: json['capacity'] ?? 1,
       status: json['status'] ?? 'available',
-      tenantId: json['tenantId'],
-      tenantName: json['tenantName'],
-      tenantPhone: json['tenantPhone'],
+      tenantId: json['tenantId'] ?? tenant['_id'],
+      tenantName: json['tenantName'] ?? tenant['fullName'],
+      tenantPhone: json['tenantPhone'] ?? tenant['phoneNumber'],
       deposit: json['deposit'] != null ? (json['deposit'] as num).toDouble() : null,
       amenities: List<String>.from(json['amenities'] ?? []),
       description: json['description'],

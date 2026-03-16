@@ -33,12 +33,20 @@ class UserData {
   final String email;
   final String fullName;
   final String role;
+  final String? phoneNumber;
+  final String? dateOfBirth;
+  final String? identityCard;
+  final String? address;
 
   UserData({
     required this.id,
     required this.email,
     required this.fullName,
     required this.role,
+    this.phoneNumber,
+    this.dateOfBirth,
+    this.identityCard,
+    this.address,
   });
 
   factory UserData.fromJson(Map<String, dynamic> json) {
@@ -47,6 +55,10 @@ class UserData {
       email: json['email'] ?? '',
       fullName: json['fullName'] ?? '',
       role: json['role'] ?? 'user',
+      phoneNumber: json['phoneNumber'],
+      dateOfBirth: json['dateOfBirth'],
+      identityCard: json['identityCard'],
+      address: json['address'],
     );
   }
 
@@ -56,8 +68,15 @@ class UserData {
       'email': email,
       'fullName': fullName,
       'role': role,
+      'phoneNumber': phoneNumber,
+      'dateOfBirth': dateOfBirth,
+      'identityCard': identityCard,
+      'address': address,
     };
   }
+
+  // Helper getter for phone (compatibility with old code)
+  String get phone => phoneNumber ?? '';
 }
 
 /// Register response model from backend
@@ -124,6 +143,9 @@ class ProfileResponse {
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? dateOfBirth;
+  final String? identityCard;
+  final String? address;
 
   ProfileResponse({
     required this.id,
@@ -134,6 +156,9 @@ class ProfileResponse {
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
+    this.dateOfBirth,
+    this.identityCard,
+    this.address,
   });
 
   factory ProfileResponse.fromJson(Map<String, dynamic> json) {
@@ -150,6 +175,9 @@ class ProfileResponse {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'])
           : DateTime.now(),
+      dateOfBirth: json['dateOfBirth'],
+      identityCard: json['identityCard'],
+      address: json['address'],
     );
   }
 
@@ -163,6 +191,9 @@ class ProfileResponse {
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'dateOfBirth': dateOfBirth,
+      'identityCard': identityCard,
+      'address': address,
     };
   }
 }
