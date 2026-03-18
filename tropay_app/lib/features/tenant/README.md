@@ -219,9 +219,9 @@ UI (Rebuild)
 - [ ] Implement retry logic
 
 ### Payment Integration
-- [ ] Tích hợp MoMo payment gateway
-- [ ] Handle payment callbacks
-- [ ] Update invoice status after payment
+- [x] Tích hợp MoMo payment gateway
+- [x] Handle payment callbacks / IPN cập nhật trạng thái
+- [x] Update invoice status after payment
 
 ### Additional Features
 - [ ] Push notifications cho sự cố mới

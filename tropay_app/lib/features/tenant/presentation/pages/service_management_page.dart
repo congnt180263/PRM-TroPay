@@ -5,12 +5,21 @@ import '../../data/models/service_model.dart';
 import '../../../../core/utils/format_utils.dart';
 
 class ServiceManagementPage extends StatelessWidget {
-  const ServiceManagementPage({super.key});
+  const ServiceManagementPage({super.key, this.initialTabIndex = 0});
+
+  final int initialTabIndex;
 
   @override
   Widget build(BuildContext context) {
+    final tabIndex = initialTabIndex < 0
+        ? 0
+        : initialTabIndex > 1
+            ? 1
+            : initialTabIndex;
+
     return DefaultTabController(
       length: 2,
+      initialIndex: tabIndex,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Dịch vụ'),

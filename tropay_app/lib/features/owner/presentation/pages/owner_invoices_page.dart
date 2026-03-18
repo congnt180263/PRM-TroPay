@@ -5,7 +5,9 @@ import '../../data/models/invoice_model.dart';
 import '../../../../core/utils/format_utils.dart';
 
 class OwnerInvoicesPage extends StatefulWidget {
-  const OwnerInvoicesPage({super.key});
+  const OwnerInvoicesPage({super.key, this.openCreate = false});
+
+  final bool openCreate;
 
   @override
   State<OwnerInvoicesPage> createState() => _OwnerInvoicesPageState();
@@ -19,6 +21,12 @@ class _OwnerInvoicesPageState extends State<OwnerInvoicesPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.openCreate) {
+        _showCreateInvoiceDialog(context);
+      }
+    });
   }
 
   @override

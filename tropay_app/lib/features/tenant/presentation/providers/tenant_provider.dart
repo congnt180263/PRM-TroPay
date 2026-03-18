@@ -3,6 +3,7 @@ import '../../data/models/invoice_model.dart';
 import '../../data/models/incident_model.dart';
 import '../../data/models/service_model.dart';
 import '../../data/models/contract_model.dart';
+import '../../data/models/payment_intent.dart';
 import '../../data/services/tenant_api_service.dart';
 
 class TenantProvider with ChangeNotifier {
@@ -201,6 +202,33 @@ class TenantProvider with ChangeNotifier {
     } catch (e) {
       _invoicesError = e.toString();
       rethrow;
+    }
+  }
+
+  Future<PaymentIntent> initiateMomoPayment(InvoiceModel invoice) async {
+    try {
+      return await _api.createMomoPayment(
+        invoiceId: invoice.id,
+        amount: invoice.totalAmount,
+      );
+    } catch (e) {
+      _invoicesError = e.toString();
+      rethrow;
+    }
+  }
+
+  Future<bool> refreshPaymentStatus(String paymentId) async {
+    try {
+      final payment = await _api.getPayment(paymentId);
+      final status = payment['status']?.toString().toLowerCase();
+      if (status == 'success') {
+        await loadInvoices();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _invoicesError = e.toString();
+      return false;
     }
   }
 

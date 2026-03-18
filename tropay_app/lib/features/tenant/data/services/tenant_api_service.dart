@@ -6,6 +6,7 @@ import '../../../owner/data/models/incident_model.dart';
 import '../../../owner/data/models/invoice_model.dart';
 import '../../data/models/contract_model.dart';
 import '../../data/models/service_model.dart';
+import '../../data/models/payment_intent.dart';
 
 class TenantApiService {
   final HttpClientService _http = HttpClientService();
@@ -136,6 +137,31 @@ class TenantApiService {
       },
     );
     _ensureSuccess(response);
+  }
+
+  Future<PaymentIntent> createMomoPayment({
+    required String invoiceId,
+    required double amount,
+  }) async {
+    final response = await _http.post(
+      ApiConfig.payments,
+      data: {
+        'invoiceId': invoiceId,
+        'amount': amount,
+        'paymentMethod': 'e_wallet',
+        'paymentGateway': 'momo',
+      },
+    );
+    _ensureSuccess(response);
+
+    final data = response.data['data'] as Map<String, dynamic>? ?? {};
+    return PaymentIntent.fromJson(data);
+  }
+
+  Future<Map<String, dynamic>> getPayment(String paymentId) async {
+    final response = await _http.get('${ApiConfig.payments}/$paymentId');
+    _ensureSuccess(response);
+    return response.data['data'] as Map<String, dynamic>? ?? {};
   }
 
   ContractModel? extractContractFromDashboard(Map<String, dynamic> data) {

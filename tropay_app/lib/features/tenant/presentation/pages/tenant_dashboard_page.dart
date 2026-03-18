@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/tenant_provider.dart';
 import '../../../../core/utils/format_utils.dart';
+import 'incident_management_page.dart';
+import 'invoice_overview_page.dart';
+import 'service_management_page.dart';
+import 'tenant_notifications_page.dart';
 
 class TenantDashboardPage extends StatefulWidget {
   const TenantDashboardPage({super.key});
@@ -28,7 +32,7 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              // TODO: Navigate to notifications
+              _openPage(const TenantNotificationsPage());
             },
           ),
         ],
@@ -53,7 +57,7 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
 
                   // Recent Invoices
                   _buildSectionHeader('Hóa đơn gần đây', onSeeAll: () {
-                    // Switch to invoice tab
+                    _openPage(const InvoiceOverviewPage());
                   }),
                   const SizedBox(height: 12),
                   _buildRecentInvoices(provider),
@@ -61,7 +65,7 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
 
                   // Recent Incidents
                   _buildSectionHeader('Sự cố đang xử lý', onSeeAll: () {
-                    // Switch to incident tab
+                    _openPage(const IncidentManagementPage());
                   }),
                   const SizedBox(height: 12),
                   _buildRecentIncidents(provider),
@@ -237,7 +241,7 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
                   ),
             ),
             onTap: () {
-              // TODO: Navigate to invoice detail
+              _openPage(const InvoiceOverviewPage());
             },
           ),
         );
@@ -294,7 +298,7 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
               labelStyle: TextStyle(color: statusColor),
             ),
             onTap: () {
-              // TODO: Navigate to incident detail
+              _openPage(const IncidentManagementPage());
             },
           ),
         );
@@ -321,7 +325,7 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
                 label: 'Báo cáo sự cố',
                 color: Colors.red,
                 onTap: () {
-                  // TODO: Navigate to report incident
+                  _openPage(const IncidentManagementPage());
                 },
               ),
             ),
@@ -332,13 +336,20 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
                 label: 'Lịch sử',
                 color: Colors.blue,
                 onTap: () {
-                  // TODO: Navigate to history
+                  _openPage(const ServiceManagementPage(initialTabIndex: 1));
                 },
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  void _openPage(Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
     );
   }
 

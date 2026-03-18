@@ -4,6 +4,10 @@ import '../providers/owner_provider.dart';
 import '../../data/models/dashboard_stats_model.dart';
 import '../../../../core/utils/format_utils.dart';
 import 'owner_room_management_page.dart';
+import 'owner_invoices_page.dart';
+import 'owner_incidents_page.dart';
+import 'owner_notifications_page.dart';
+import 'owner_reports_page.dart';
 
 class OwnerDashboardPage extends StatefulWidget {
   const OwnerDashboardPage({super.key});
@@ -30,7 +34,12 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              // TODO: Navigate to notifications
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const OwnerNotificationsPage(),
+                ),
+              );
             },
           ),
         ],
@@ -430,9 +439,11 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
               label: 'Tạo hóa đơn',
               color: Colors.green,
               onTap: () {
-                // TODO: Navigate to create invoice
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tính năng đang phát triển')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const OwnerInvoicesPage(openCreate: true),
+                  ),
                 );
               },
             ),
@@ -454,9 +465,11 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
               label: 'Báo cáo',
               color: Colors.orange,
               onTap: () {
-                // TODO: Navigate to reports
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tính năng đang phát triển')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const OwnerReportsPage(),
+                  ),
                 );
               },
             ),
@@ -512,7 +525,12 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
             ),
             TextButton(
               onPressed: () {
-                // TODO: Show all activities
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const OwnerNotificationsPage(),
+                  ),
+                );
               },
               child: const Text('Xem tất cả'),
             ),

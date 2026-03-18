@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/tenant_provider.dart';
 import '../../data/models/invoice_model.dart';
+import '../../data/models/payment_intent.dart';
 import '../../../../core/utils/format_utils.dart';
 
 class InvoiceOverviewPage extends StatelessWidget {
@@ -292,44 +294,172 @@ class InvoiceOverviewPage extends StatelessWidget {
   }
 
   void _handlePayment(BuildContext context, InvoiceModel invoice) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        bool isProcessing = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> startMomoPayment() async {
+              if (isProcessing) return;
+              setState(() => isProcessing = true);
+
+              try {
+                final intent = await context.read<TenantProvider>().initiateMomoPayment(invoice);
+                if (sheetContext.mounted) {
+                  Navigator.pop(sheetContext);
+                  await _openPaymentIntent(context, intent, invoice);
+                }
+              } catch (e) {
+                if (sheetContext.mounted) {
+                  ScaffoldMessenger.of(sheetContext).showSnackBar(
+                    SnackBar(content: Text('Thanh toán MoMo thất bại: $e')),
+                  );
+                }
+              } finally {
+                if (sheetContext.mounted) {
+                  setState(() => isProcessing = false);
+                }
+              }
+            }
+
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Chọn phương thức thanh toán',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    leading: const Icon(Icons.account_balance_wallet),
+                    title: const Text('MoMo'),
+                    subtitle: Text('Thanh toán ${FormatUtils.formatCurrency(invoice.totalAmount)}'),
+                    trailing: isProcessing
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.chevron_right),
+                    onTap: isProcessing ? null : startMomoPayment,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.account_balance),
+                    title: const Text('Chuyển khoản ngân hàng'),
+                    subtitle: const Text('Đang phát triển'),
+                    enabled: false,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _openPaymentIntent(
+    BuildContext context,
+    PaymentIntent intent,
+    InvoiceModel invoice,
+  ) async {
+    if (intent.hasRedirect) {
+      final uri = Uri.tryParse(intent.payUrl);
+      if (uri != null) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    }
+
+    if (context.mounted) {
+      _showPaymentStatusDialog(context, intent, invoice);
+    }
+  }
+
+  void _showPaymentStatusDialog(
+    BuildContext context,
+    PaymentIntent intent,
+    InvoiceModel invoice,
+  ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Thanh toán hóa đơn'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Hóa đơn: ${invoice.month}'),
-            const SizedBox(height: 8),
-            Text(
-              'Số tiền: ${FormatUtils.formatCurrency(invoice.totalAmount)}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            const Text('Chọn phương thức thanh toán:'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
-          ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement MoMo payment
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Chức năng thanh toán MoMo đang được phát triển'),
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        String? statusMessage;
+        bool checking = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> checkStatus() async {
+              setState(() {
+                checking = true;
+                statusMessage = 'Đang kiểm tra trạng thái thanh toán...';
+              });
+
+              final success = await context.read<TenantProvider>().refreshPaymentStatus(intent.paymentId);
+              if (!context.mounted) return;
+
+              setState(() {
+                checking = false;
+                statusMessage = success
+                    ? 'Thanh toán thành công! Hóa đơn sẽ được cập nhật.'
+                    : 'Chưa nhận được xác nhận từ MoMo. Vui lòng thử lại sau.';
+              });
+
+              if (success && dialogContext.mounted) {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(content: Text('Đã xác nhận thanh toán MoMo')),
+                );
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Thanh toán MoMo'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Vui lòng hoàn tất thanh toán trong ứng dụng MoMo'),
+                  const SizedBox(height: 8),
+                  Text('Số tiền: ${FormatUtils.formatCurrency(invoice.totalAmount)}'),
+                  if (statusMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      statusMessage!,
+                      style: TextStyle(
+                        color: statusMessage!.contains('thành công') ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: checking ? null : () => Navigator.pop(dialogContext),
+                  child: const Text('Đóng'),
                 ),
-              );
-            },
-            icon: const Icon(Icons.account_balance_wallet),
-            label: const Text('MoMo'),
-          ),
-        ],
-      ),
+                FilledButton.icon(
+                  onPressed: checking ? null : checkStatus,
+                  icon: checking
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check_circle_outline),
+                  label: Text(checking ? 'Đang kiểm tra...' : 'Tôi đã thanh toán'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
