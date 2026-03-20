@@ -222,6 +222,12 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// Optimistically update the in-memory profile so UI reflects recent edits
+  void updateLocalProfile(UserData updatedUser) {
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();

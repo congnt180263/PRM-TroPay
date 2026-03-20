@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/tenant_provider.dart';
 import '../../../../core/utils/format_utils.dart';
 
@@ -259,14 +260,7 @@ class ContractPage extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
-                        onPressed: () {
-                          // TODO: Download contract document
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Chức năng tải xuống đang được phát triển'),
-                            ),
-                          );
-                        },
+                        onPressed: () => _downloadContract(context, contract.documentUrl!),
                         icon: const Icon(Icons.download),
                         label: const Text('Tải xuống hợp đồng'),
                         style: FilledButton.styleFrom(
@@ -318,5 +312,30 @@ class ContractPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _downloadContract(BuildContext context, String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể mở file hợp đồng')),
+      );
+      return;
+    }
+
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể tải xuống hợp đồng')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Có lỗi khi mở hợp đồng')),
+        );
+      }
+    }
   }
 }

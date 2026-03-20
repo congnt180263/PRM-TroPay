@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'tenant_edit_profile_page.dart';
+import 'tenant_help_support_page.dart';
+import 'tenant_notification_settings_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -121,11 +124,11 @@ class ProfilePage extends StatelessWidget {
                         leading: const Icon(Icons.edit_outlined),
                         title: const Text('Chỉnh sửa hồ sơ'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          // TODO: Navigate to edit profile
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Chức năng đang được phát triển'),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TenantEditProfilePage(),
                             ),
                           );
                         },
@@ -145,10 +148,10 @@ class ProfilePage extends StatelessWidget {
                         title: const Text('Cài đặt thông báo'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
-                          // TODO: Navigate to notification settings
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Chức năng đang được phát triển'),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TenantNotificationSettingsPage(),
                             ),
                           );
                         },
@@ -159,10 +162,10 @@ class ProfilePage extends StatelessWidget {
                         title: const Text('Trợ giúp & Hỗ trợ'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
-                          // TODO: Navigate to help
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Chức năng đang được phát triển'),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TenantHelpSupportPage(),
                             ),
                           );
                         },

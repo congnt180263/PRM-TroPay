@@ -221,7 +221,8 @@ class TenantProvider with ChangeNotifier {
     try {
       final payment = await _api.getPayment(paymentId);
       final status = payment['status']?.toString().toLowerCase();
-      if (status == 'success') {
+      const successStatuses = {'success', 'succeeded', 'paid', 'completed'};
+      if (successStatuses.contains(status)) {
         await loadInvoices();
         return true;
       }

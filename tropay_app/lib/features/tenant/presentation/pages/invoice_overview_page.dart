@@ -369,15 +369,33 @@ class InvoiceOverviewPage extends StatelessWidget {
     PaymentIntent intent,
     InvoiceModel invoice,
   ) async {
-    if (intent.hasRedirect) {
-      final uri = Uri.tryParse(intent.payUrl);
-      if (uri != null) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final uri = _resolvePaymentUri(intent);
+    if (uri == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không tìm thấy liên kết thanh toán MoMo')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể mở ứng dụng MoMo')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Có lỗi khi mở liên kết MoMo')),
+        );
       }
     }
 
     if (context.mounted) {
-      _showPaymentStatusDialog(context, intent, invoice);
+      _showPaymentStatusDialog(context, intent, invoice, autoCheck: true);
     }
   }
 
@@ -385,7 +403,10 @@ class InvoiceOverviewPage extends StatelessWidget {
     BuildContext context,
     PaymentIntent intent,
     InvoiceModel invoice,
+    {bool autoCheck = false},
   ) {
+    bool hasAutoChecked = false;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -417,6 +438,11 @@ class InvoiceOverviewPage extends StatelessWidget {
                   const SnackBar(content: Text('Đã xác nhận thanh toán MoMo')),
                 );
               }
+            }
+
+            if (autoCheck && !hasAutoChecked) {
+              hasAutoChecked = true;
+              Future.microtask(() => checkStatus());
             }
 
             return AlertDialog(
@@ -461,5 +487,15 @@ class InvoiceOverviewPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Uri? _resolvePaymentUri(PaymentIntent intent) {
+    if (intent.deeplink != null && intent.deeplink!.isNotEmpty) {
+      return Uri.tryParse(intent.deeplink!);
+    }
+    if (intent.payUrl.isNotEmpty) {
+      return Uri.tryParse(intent.payUrl);
+    }
+    return null;
   }
 }

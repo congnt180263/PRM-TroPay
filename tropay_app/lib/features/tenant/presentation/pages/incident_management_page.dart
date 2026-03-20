@@ -4,8 +4,16 @@ import '../providers/tenant_provider.dart';
 import '../../data/models/incident_model.dart';
 import '../../../../core/utils/format_utils.dart';
 
-class IncidentManagementPage extends StatelessWidget {
+class IncidentManagementPage extends StatefulWidget {
   const IncidentManagementPage({super.key});
+
+  @override
+  State<IncidentManagementPage> createState() => _IncidentManagementPageState();
+}
+
+class _IncidentManagementPageState extends State<IncidentManagementPage> {
+  String? _statusFilter;
+  String? _priorityFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -15,9 +23,7 @@ class IncidentManagementPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Show filter dialog
-            },
+            onPressed: _showFilterSheet,
           ),
         ],
       ),
@@ -27,7 +33,9 @@ class IncidentManagementPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.incidents.isEmpty) {
+          final filtered = _applyFilters(provider.incidents);
+
+          if (filtered.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -39,7 +47,9 @@ class IncidentManagementPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Không có sự cố nào',
+                    provider.incidents.isEmpty
+                        ? 'Không có sự cố nào'
+                        : 'Không có sự cố khớp bộ lọc',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 16,
@@ -54,9 +64,37 @@ class IncidentManagementPage extends StatelessWidget {
             onRefresh: () => provider.loadIncidents(),
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: provider.incidents.length,
+              itemCount: filtered.length + (_hasFilters ? 1 : 0),
               itemBuilder: (context, index) {
-                final incident = provider.incidents[index];
+                if (_hasFilters && index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (_statusFilter != null)
+                          FilterChip(
+                            label: Text('Trạng thái: ${_statusLabel(_statusFilter!)}'),
+                            onSelected: (_) => _clearStatus(),
+                          ),
+                        if (_priorityFilter != null)
+                          FilterChip(
+                            label: Text('Độ ưu tiên: ${_priorityLabel(_priorityFilter!)}'),
+                            onSelected: (_) => _clearPriority(),
+                          ),
+                        TextButton.icon(
+                          onPressed: _clearFilters,
+                          icon: const Icon(Icons.close),
+                          label: const Text('Xóa bộ lọc'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final incident = filtered[_hasFilters ? index - 1 : index];
                 return _buildIncidentCard(context, incident);
               },
             ),
@@ -71,6 +109,186 @@ class IncidentManagementPage extends StatelessWidget {
         label: const Text('Báo cáo sự cố'),
       ),
     );
+  }
+
+  bool get _hasFilters => _statusFilter != null || _priorityFilter != null;
+
+  List<IncidentModel> _applyFilters(List<IncidentModel> incidents) {
+    return incidents.where((incident) {
+      final matchesStatus = _statusFilter == null || incident.status == _statusFilter;
+      final matchesPriority = _priorityFilter == null || incident.priority == _priorityFilter;
+      return matchesStatus && matchesPriority;
+    }).toList();
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        String? selectedStatus = _statusFilter;
+        String? selectedPriority = _priorityFilter;
+
+        Widget buildChips(List<String> options, String? value, void Function(String?) onChanged) {
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: options.map((option) {
+              return ChoiceChip(
+                label: Text(option),
+                selected: value == _statusKey(option) || value == _priorityKey(option),
+                onSelected: (isSelected) {
+                  final key = _statusKey(option) ?? _priorityKey(option);
+                  onChanged(isSelected ? key : null);
+                },
+              );
+            }).toList(),
+          );
+        }
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bộ lọc sự cố',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Trạng thái', style: Theme.of(context).textTheme.labelLarge),
+                    const SizedBox(height: 8),
+                    buildChips(
+                      const ['Tất cả', 'Chờ xử lý', 'Đang xử lý', 'Đã giải quyết', 'Đã từ chối'],
+                      selectedStatus,
+                      (value) => setModalState(() => selectedStatus = value),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Độ ưu tiên', style: Theme.of(context).textTheme.labelLarge),
+                    const SizedBox(height: 8),
+                    buildChips(
+                      const ['Tất cả', 'Khẩn cấp', 'Cao', 'Trung bình', 'Thấp'],
+                      selectedPriority,
+                      (value) => setModalState(() => selectedPriority = value),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _statusFilter = null;
+                                _priorityFilter = null;
+                              });
+                              Navigator.pop(sheetContext);
+                            },
+                            child: const Text('Xóa bộ lọc'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              setState(() {
+                                _statusFilter = selectedStatus;
+                                _priorityFilter = selectedPriority;
+                              });
+                              Navigator.pop(sheetContext);
+                            },
+                            child: const Text('Áp dụng'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _statusFilter = null;
+      _priorityFilter = null;
+    });
+  }
+
+  void _clearStatus() {
+    setState(() => _statusFilter = null);
+  }
+
+  void _clearPriority() {
+    setState(() => _priorityFilter = null);
+  }
+
+  String _statusLabel(String key) {
+    switch (key) {
+      case 'pending':
+        return 'Chờ xử lý';
+      case 'in_progress':
+        return 'Đang xử lý';
+      case 'resolved':
+        return 'Đã giải quyết';
+      case 'rejected':
+        return 'Đã từ chối';
+      default:
+        return 'Tất cả';
+    }
+  }
+
+  String _priorityLabel(String key) {
+    switch (key) {
+      case 'urgent':
+        return 'Khẩn cấp';
+      case 'high':
+        return 'Cao';
+      case 'medium':
+        return 'Trung bình';
+      case 'low':
+        return 'Thấp';
+      default:
+        return 'Tất cả';
+    }
+  }
+
+  String? _statusKey(String label) {
+    switch (label) {
+      case 'Chờ xử lý':
+        return 'pending';
+      case 'Đang xử lý':
+        return 'in_progress';
+      case 'Đã giải quyết':
+        return 'resolved';
+      case 'Đã từ chối':
+        return 'rejected';
+      case 'Tất cả':
+        return null;
+    }
+    return null;
+  }
+
+  String? _priorityKey(String label) {
+    switch (label) {
+      case 'Khẩn cấp':
+        return 'urgent';
+      case 'Cao':
+        return 'high';
+      case 'Trung bình':
+        return 'medium';
+      case 'Thấp':
+        return 'low';
+      case 'Tất cả':
+        return null;
+    }
+    return null;
   }
 
   Widget _buildIncidentCard(BuildContext context, IncidentModel incident) {
