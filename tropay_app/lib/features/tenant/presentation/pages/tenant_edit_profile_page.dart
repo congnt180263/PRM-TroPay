@@ -211,6 +211,7 @@ class _TenantEditProfilePageState extends State<TenantEditProfilePage> {
       address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
     );
 
+    if (!mounted) return;
     context.read<AuthProvider>().updateLocalProfile(updatedUser);
 
     if (mounted) {

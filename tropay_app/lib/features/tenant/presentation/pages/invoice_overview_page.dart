@@ -402,9 +402,9 @@ class InvoiceOverviewPage extends StatelessWidget {
   void _showPaymentStatusDialog(
     BuildContext context,
     PaymentIntent intent,
-    InvoiceModel invoice,
-    {bool autoCheck = false},
-  ) {
+    InvoiceModel invoice, {
+    bool autoCheck = false,
+  }) {
     bool hasAutoChecked = false;
 
     showDialog(

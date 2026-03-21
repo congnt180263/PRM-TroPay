@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import '../../../../core/constants/api_config.dart';
 import '../../../../core/models/paginated_result.dart';
 import '../../../../core/services/http_client_service.dart';
-import '../../../owner/data/models/incident_model.dart';
-import '../../../owner/data/models/invoice_model.dart';
-import '../../data/models/contract_model.dart';
-import '../../data/models/service_model.dart';
-import '../../data/models/payment_intent.dart';
+import '../models/incident_model.dart';
+import '../models/invoice_model.dart';
+import '../models/contract_model.dart';
+import '../models/service_model.dart';
+import '../models/payment_intent.dart';
 
 class TenantApiService {
   final HttpClientService _http = HttpClientService();

@@ -88,7 +88,7 @@ class ProfilePage extends StatelessWidget {
                         context,
                         icon: Icons.email_outlined,
                         title: 'Email',
-                        value: user.email ?? 'Chưa cập nhật',
+                        value: user.email.isEmpty ? 'Chưa cập nhật' : user.email,
                       ),
                       const Divider(height: 1),
                       _buildInfoTile(
