@@ -1,5 +1,6 @@
 class RoomModel {
   final String id;
+  final String buildingId;
   final String roomNumber;
   final dynamic floor; // Can be int or String
   final double area; // m2
@@ -17,6 +18,7 @@ class RoomModel {
 
   RoomModel({
     required this.id,
+    required this.buildingId,
     required this.roomNumber,
     required this.floor,
     required this.area,
@@ -38,6 +40,7 @@ class RoomModel {
 
     return RoomModel(
       id: json['id'] ?? json['_id'] ?? '',
+      buildingId: json['buildingId'] ?? '',
       roomNumber: json['roomNumber'] ?? '',
       floor: json['floor'] ?? '',
       area: (json['area'] ?? 0).toDouble(),
@@ -60,6 +63,7 @@ class RoomModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'buildingId': buildingId,
       'roomNumber': roomNumber,
       'floor': floor,
       'area': area,
@@ -83,6 +87,7 @@ class RoomModel {
 
   RoomModel copyWith({
     String? id,
+    String? buildingId,
     String? roomNumber,
     dynamic floor,
     double? area,
@@ -100,6 +105,7 @@ class RoomModel {
   }) {
     return RoomModel(
       id: id ?? this.id,
+      buildingId: buildingId ?? this.buildingId,
       roomNumber: roomNumber ?? this.roomNumber,
       floor: floor ?? this.floor,
       area: area ?? this.area,

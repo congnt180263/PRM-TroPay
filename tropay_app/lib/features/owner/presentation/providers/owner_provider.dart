@@ -5,16 +5,25 @@ import '../../data/models/feedback_model.dart';
 import '../../data/models/invoice_model.dart';
 import '../../data/models/incident_model.dart';
 import '../../data/models/service_model.dart';
+import '../../data/models/building_model.dart';
 import '../../data/services/owner_api_service.dart';
+import '../../data/services/building_api_service.dart';
 
 class OwnerProvider with ChangeNotifier {
   final OwnerApiService _api = OwnerApiService();
+  final BuildingApiService _buildingService = BuildingApiService();
 
   // Dashboard Stats
   DashboardStatsModel? _dashboardStats;
   List<RevenueChartModel> _revenueChart = [];
   bool _isLoadingDashboard = false;
   String? _dashboardError;
+
+  // Building State
+  BuildingModel? _building;
+  BuildingStatsModel? _buildingStats;
+  bool _isLoadingBuilding = false;
+  String? _buildingError;
 
   // Rooms
   List<RoomModel> _rooms = [];
@@ -45,6 +54,12 @@ class OwnerProvider with ChangeNotifier {
   DashboardStatsModel? get dashboardStats => _dashboardStats;
   List<RevenueChartModel> get revenueChart => _revenueChart;
   bool get isLoadingDashboard => _isLoadingDashboard;
+
+  BuildingModel? get building => _building;
+  BuildingStatsModel? get buildingStats => _buildingStats;
+  bool get isLoadingBuilding => _isLoadingBuilding;
+  String? get buildingError => _buildingError;
+  bool get hasBuilding => _building != null;
 
   List<RoomModel> get rooms => _rooms;
   List<RoomModel> get availableRooms =>
@@ -82,6 +97,7 @@ class OwnerProvider with ChangeNotifier {
   // Initialize
   Future<void> initialize() async {
     await Future.wait([
+      loadBuilding(),
       loadDashboardStats(),
       loadRooms(),
       loadInvoices(),
@@ -114,6 +130,101 @@ class OwnerProvider with ChangeNotifier {
       _isLoadingDashboard = false;
       notifyListeners();
     }
+  }
+
+  // ==================== Building Management ====================
+
+  /// Load building data for the current owner
+  Future<void> loadBuilding() async {
+    _isLoadingBuilding = true;
+    _buildingError = null;
+    notifyListeners();
+
+    try {
+      _building = await _buildingService.getMyBuilding();
+
+      if (_building != null) {
+        // Load stats if building exists
+        _buildingStats = await _buildingService.getBuildingStats(_building!.id);
+      }
+
+      _buildingError = null;
+    } catch (e) {
+      _buildingError = e.toString();
+      print('Error loading building: $e');
+    } finally {
+      _isLoadingBuilding = false;
+      notifyListeners();
+    }
+  }
+
+  /// Create a new building
+  Future<bool> createBuilding(Map<String, dynamic> buildingData) async {
+    _isLoadingBuilding = true;
+    _buildingError = null;
+    notifyListeners();
+
+    try {
+      _building = await _buildingService.createBuilding(buildingData);
+      _buildingError = null;
+      notifyListeners();
+
+      // Load stats after creation
+      await loadBuildingStats();
+
+      return true;
+    } catch (e) {
+      _buildingError = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoadingBuilding = false;
+      notifyListeners();
+    }
+  }
+
+  /// Update building information
+  Future<bool> updateBuilding(Map<String, dynamic> updates) async {
+    if (_building == null) return false;
+
+    _isLoadingBuilding = true;
+    _buildingError = null;
+    notifyListeners();
+
+    try {
+      _building = await _buildingService.updateBuilding(_building!.id, updates);
+      _buildingError = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _buildingError = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoadingBuilding = false;
+      notifyListeners();
+    }
+  }
+
+  /// Refresh building statistics
+  Future<void> loadBuildingStats() async {
+    if (_building == null) return;
+
+    try {
+      _buildingStats = await _buildingService.getBuildingStats(_building!.id);
+      notifyListeners();
+    } catch (e) {
+      print('Error loading building stats: $e');
+    }
+  }
+
+  /// Clear building data (e.g., on logout)
+  void clearBuilding() {
+    _building = null;
+    _buildingStats = null;
+    _buildingError = null;
+    _isLoadingBuilding = false;
+    notifyListeners();
   }
 
   // Load Rooms
@@ -215,8 +326,15 @@ class OwnerProvider with ChangeNotifier {
     int capacity = 1,
     List<String>? amenities,
   }) async {
+    // Ensure building exists before creating room
+    if (_building == null) {
+      _roomsError = 'You must create a building before adding rooms';
+      throw Exception(_roomsError);
+    }
+
     try {
       final room = await _api.createRoom({
+        'buildingId': _building!.id,
         'roomNumber': roomNumber,
         'area': area,
         'price': price,

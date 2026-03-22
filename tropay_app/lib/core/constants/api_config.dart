@@ -6,20 +6,10 @@ class ApiConfig {
   // For local development: http://10.0.2.2:3000 (Android Emulator)
   // For iOS Simulator: http://localhost:3000
   // For physical device: http://YOUR_COMPUTER_IP:3000
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://10.0.2.2:3000/api';
 
-  // API Endpoints
-  static const String auth = '/auth';
-  static const String users = '/users';
-  static const String orders = '/orders';
-  static const String payments = '/payments';
-  static const String rooms = '/rooms';
-  static const String services = '/services';
-  static const String leases = '/leases';
-  static const String invoices = '/invoices';
-  static const String tenant = '/tenant';
-
-  // Auth Endpoints
+  // ==================== Module: Auth ====================
+  static const String auth = '$baseUrl/auth';
   static const String register = '$auth/register';
   static const String login = '$auth/login';
   static const String refreshToken = '$auth/refresh-token';
@@ -28,6 +18,34 @@ class ApiConfig {
   static const String changePassword = '$auth/change-password';
   static const String forgotPassword = '$auth/forgot-password';
   static const String resetPassword = '$auth/reset-password';
+
+  // ==================== Module: Buildings ====================
+  static const String buildings = '$baseUrl/buildings';
+  static const String myBuilding = '$buildings/my-building';
+  static String buildingById(String id) => '$buildings/$id';
+  static String buildingStats(String id) => '$buildings/$id/stats';
+
+  // ==================== Module: Rooms ====================
+  static const String rooms = '$baseUrl/rooms';
+  static const String roomsDashboard = '$rooms/dashboard';
+  static String roomById(String id) => '$rooms/$id';
+
+  // ==================== Module: Leases ====================
+  static const String leases = '$baseUrl/leases';
+  static String leaseById(String id) => '$leases/$id';
+
+  // ==================== Module: Invoices ====================
+  static const String invoices = '$baseUrl/invoices';
+  static String invoiceById(String id) => '$invoices/$id';
+
+  // ==================== Module: Services ====================
+  static const String services = '$baseUrl/services';
+  static String serviceById(String id) => '$services/$id';
+
+  // ==================== Module: Tenant ====================
+  static const String tenant = '$baseUrl/tenant';
+  static const String maintenanceRequests = '$tenant/maintenance-requests';
+  static const String maintenanceRequestsOwner = '$maintenanceRequests/owner';
 
   // Timeout configuration
   static const Duration connectTimeout = Duration(seconds: 30);

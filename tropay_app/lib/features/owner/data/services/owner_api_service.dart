@@ -134,6 +134,11 @@ class OwnerApiService {
   }
 
   Future<RoomModel> createRoom(Map<String, dynamic> payload) async {
+    // Validate buildingId is present
+    if (!payload.containsKey('buildingId') || payload['buildingId'] == null) {
+      throw Exception('buildingId is required to create a room');
+    }
+
     final response = await _http.post(ApiConfig.rooms, data: payload);
     _ensureSuccess(response);
     final data = response.data['data'] as Map<String, dynamic>? ?? {};
