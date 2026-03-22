@@ -6,7 +6,7 @@ class ApiConfig {
   // For local development: http://10.0.2.2:3000 (Android Emulator)
   // For iOS Simulator: http://localhost:3000
   // For physical device: http://YOUR_COMPUTER_IP:3000
-  static const String baseUrl = 'http://10.0.2.2:3000/api';
+  static const String baseUrl = 'http://10.128.89.196:3000/api';
 
   // ==================== Module: Auth ====================
   static const String auth = '$baseUrl/auth';
@@ -37,6 +37,9 @@ class ApiConfig {
   // ==================== Module: Invoices ====================
   static const String invoices = '$baseUrl/invoices';
   static String invoiceById(String id) => '$invoices/$id';
+
+  // ==================== Module: Payments ====================
+  static const String payments = '$baseUrl/payments';
 
   // ==================== Module: Services ====================
   static const String services = '$baseUrl/services';

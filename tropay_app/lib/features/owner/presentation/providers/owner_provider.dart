@@ -252,7 +252,10 @@ class OwnerProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _api.fetchInvoices(limit: 100);
+      final result = await _api.fetchInvoices(
+        buildingId: _building?.id,
+        limit: 100,
+      );
       _invoices = result.items;
     } catch (e) {
       _invoices = [];

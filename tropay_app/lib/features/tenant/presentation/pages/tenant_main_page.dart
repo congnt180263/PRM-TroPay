@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../pages/tenant_dashboard_page.dart';
 import '../pages/invoice_overview_page.dart';
-import '../pages/service_management_page.dart';
 import '../pages/incident_management_page.dart';
 import '../pages/contract_page.dart';
 import '../pages/profile_page.dart';
@@ -19,7 +18,6 @@ class _TenantMainPageState extends State<TenantMainPage> {
   final List<Widget> _pages = const [
     TenantDashboardPage(),
     InvoiceOverviewPage(),
-    ServiceManagementPage(),
     IncidentManagementPage(),
     ContractPage(),
     ProfilePage(),
@@ -35,11 +33,6 @@ class _TenantMainPageState extends State<TenantMainPage> {
       icon: Icon(Icons.receipt_long_outlined),
       selectedIcon: Icon(Icons.receipt_long),
       label: 'Hóa đơn',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.room_service_outlined),
-      selectedIcon: Icon(Icons.room_service),
-      label: 'Dịch vụ',
     ),
     NavigationDestination(
       icon: Icon(Icons.warning_amber_outlined),

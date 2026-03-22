@@ -277,7 +277,7 @@ class _OwnerIncidentsPageState extends State<OwnerIncidentsPage>
               const Divider(),
               _buildDetailRow(
                 'Thời gian báo cáo',
-                FormatUtils.formatDateTime(incident.reportedAt),
+                FormatUtils.formatDateTime(incident.createdAt),
               ),
               const Divider(),
               Row(

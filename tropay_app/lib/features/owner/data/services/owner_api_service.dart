@@ -64,6 +64,7 @@ class OwnerApiService {
   }
 
   Future<PaginatedResult<InvoiceModel>> fetchInvoices({
+    String? buildingId,
     String? status,
     String? roomId,
     String? tenantId,
@@ -75,6 +76,7 @@ class OwnerApiService {
       queryParameters: {
         'page': page,
         'limit': limit,
+        if (buildingId != null) 'buildingId': buildingId,
         if (status != null) 'status': status,
         if (roomId != null) 'roomId': roomId,
         if (tenantId != null) 'tenantId': tenantId,

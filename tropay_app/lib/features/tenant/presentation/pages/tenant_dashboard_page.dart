@@ -233,12 +233,15 @@ class _TenantDashboardPageState extends State<TenantDashboardPage> {
             subtitle: Text(
               invoice.isOverdue ? 'Quá hạn thanh toán' : 'Hạn: ${FormatUtils.formatDate(invoice.dueDate)}',
             ),
-            trailing: Text(
-              FormatUtils.formatCurrency(invoice.totalAmount),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+            trailing: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                FormatUtils.formatCurrency(invoice.totalAmount),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
             ),
             onTap: () {
               _openPage(const InvoiceOverviewPage());

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/owner_provider.dart';
 import '../../data/models/dashboard_stats_model.dart';
 import '../../../../core/utils/format_utils.dart';
+import '../../../../core/widgets/building_info_card.dart';
 import 'owner_room_management_page.dart';
 import 'owner_invoices_page.dart';
 import 'owner_notifications_page.dart';
@@ -62,6 +63,15 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Building Info Card
+                  BuildingInfoCard(
+                    building: provider.building,
+                    error: provider.buildingError,
+                    isLoading: provider.isLoadingBuilding,
+                    onRetry: () => provider.loadBuilding(),
+                  ),
+                  const SizedBox(height: 20),
+
                   // Welcome Card
                   _buildWelcomeCard(context),
                   const SizedBox(height: 20),

@@ -159,12 +159,16 @@ class InvoiceOverviewPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    invoice.isPaid
-                        ? 'Đã thanh toán: ${FormatUtils.formatDate(invoice.paidDate!)}'
-                        : 'Hạn thanh toán: ${FormatUtils.formatDate(invoice.dueDate)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                  Expanded(
+                    child: Text(
+                      invoice.isPaid
+                          ? (invoice.paidDate != null
+                              ? 'Đã thanh toán: ${FormatUtils.formatDate(invoice.paidDate!)}'
+                              : 'Đã thanh toán')
+                          : 'Hạn thanh toán: ${FormatUtils.formatDate(invoice.dueDate)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ),
                   if (!invoice.isPaid)
@@ -245,7 +249,7 @@ class InvoiceOverviewPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _buildDetailRow('Hạn thanh toán', FormatUtils.formatDate(invoice.dueDate)),
-              if (invoice.isPaid)
+              if (invoice.isPaid && invoice.paidDate != null)
                 _buildDetailRow('Đã thanh toán', FormatUtils.formatDate(invoice.paidDate!)),
               const SizedBox(height: 24),
               if (!invoice.isPaid)
@@ -310,7 +314,7 @@ class InvoiceOverviewPage extends StatelessWidget {
                 final intent = await context.read<TenantProvider>().initiateMomoPayment(invoice);
                 if (sheetContext.mounted) {
                   Navigator.pop(sheetContext);
-                  await _openPaymentIntent(context, intent, invoice);
+                  await _openPaymentIntent(context, intent, invoice, sheetContext: sheetContext);
                 }
               } catch (e) {
                 if (sheetContext.mounted) {
@@ -368,7 +372,8 @@ class InvoiceOverviewPage extends StatelessWidget {
     BuildContext context,
     PaymentIntent intent,
     InvoiceModel invoice,
-  ) async {
+    {BuildContext? sheetContext,
+  }) async {
     final uri = _resolvePaymentUri(intent);
     if (uri == null) {
       if (context.mounted) {
@@ -395,7 +400,7 @@ class InvoiceOverviewPage extends StatelessWidget {
     }
 
     if (context.mounted) {
-      _showPaymentStatusDialog(context, intent, invoice, autoCheck: true);
+      _showPaymentStatusDialog(context, intent, invoice, autoCheck: true, sheetContext: sheetContext);
     }
   }
 
@@ -404,6 +409,7 @@ class InvoiceOverviewPage extends StatelessWidget {
     PaymentIntent intent,
     InvoiceModel invoice, {
     bool autoCheck = false,
+    BuildContext? sheetContext,
   }) {
     bool hasAutoChecked = false;
 
@@ -413,6 +419,7 @@ class InvoiceOverviewPage extends StatelessWidget {
       builder: (dialogContext) {
         String? statusMessage;
         bool checking = false;
+        bool marking = false;
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -434,9 +441,58 @@ class InvoiceOverviewPage extends StatelessWidget {
 
               if (success && dialogContext.mounted) {
                 Navigator.pop(dialogContext);
+
+                // Pop sheet if provided
+                if (sheetContext?.mounted ?? false) {
+                  Navigator.pop(sheetContext!);
+                }
+
                 ScaffoldMessenger.of(dialogContext).showSnackBar(
                   const SnackBar(content: Text('Đã xác nhận thanh toán MoMo')),
                 );
+              }
+            }
+
+            Future<void> markAsPaid() async {
+              setState(() {
+                marking = true;
+                statusMessage = 'Đang cập nhật trạng thái...';
+              });
+
+              try {
+                await context.read<TenantProvider>().markInvoiceAsPaid(invoice.id);
+                if (!context.mounted) return;
+
+                setState(() {
+                  marking = false;
+                  statusMessage = 'Đã cập nhật trạng thái thanh toán!';
+                });
+
+                if (dialogContext.mounted) {
+                  // Small delay to show success message
+                  await Future.delayed(const Duration(milliseconds: 500));
+
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+
+                  // Pop sheet if provided
+                  if (sheetContext?.mounted ?? false) {
+                    Navigator.pop(sheetContext!);
+                  }
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Hóa đơn đã được đánh dấu đã thanh toán')),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (!context.mounted) return;
+                setState(() {
+                  marking = false;
+                  statusMessage = 'Cập nhật thất bại: $e';
+                });
               }
             }
 
@@ -467,11 +523,21 @@ class InvoiceOverviewPage extends StatelessWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: checking ? null : () => Navigator.pop(dialogContext),
+                  onPressed: (checking || marking) ? null : () => Navigator.pop(dialogContext),
                   child: const Text('Đóng'),
                 ),
+                TextButton(
+                  onPressed: (checking || marking) ? null : markAsPaid,
+                  child: marking
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Đánh dấu đã thanh toán'),
+                ),
                 FilledButton.icon(
-                  onPressed: checking ? null : checkStatus,
+                  onPressed: (checking || marking) ? null : checkStatus,
                   icon: checking
                       ? const SizedBox(
                           width: 18,
@@ -479,7 +545,7 @@ class InvoiceOverviewPage extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.check_circle_outline),
-                  label: Text(checking ? 'Đang kiểm tra...' : 'Tôi đã thanh toán'),
+                  label: Text(checking ? 'Đang kiểm tra...' : 'Kiểm tra MoMo'),
                 ),
               ],
             );

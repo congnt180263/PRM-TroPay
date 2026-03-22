@@ -121,6 +121,18 @@ class TenantApiService {
     return PaginatedResult<ServiceHistoryModel>(items: history, pagination: pagination);
   }
 
+  Future<List<ServiceModel>> fetchServices() async {
+    final response = await _http.get('${ApiConfig.tenant}/services/usage');
+    _ensureSuccess(response);
+
+    final payload = response.data['data'] as Map<String, dynamic>? ?? {};
+    final services = (payload['services'] as List<dynamic>? ?? <dynamic>[])
+        .map((item) => ServiceModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+
+    return services;
+  }
+
   Future<void> payInvoice({
     required String invoiceId,
     required double amount,
@@ -162,6 +174,14 @@ class TenantApiService {
     final response = await _http.get('${ApiConfig.payments}/$paymentId');
     _ensureSuccess(response);
     return response.data['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<void> updateInvoiceStatus(String invoiceId, String status) async {
+    final response = await _http.patch(
+      '${ApiConfig.tenant}/invoices/$invoiceId/status',
+      data: {'status': status},
+    );
+    _ensureSuccess(response);
   }
 
   ContractModel? extractContractFromDashboard(Map<String, dynamic> data) {

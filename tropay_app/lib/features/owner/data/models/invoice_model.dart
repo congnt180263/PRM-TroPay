@@ -7,10 +7,11 @@ class InvoiceModel {
   final double waterCost;
   final double roomCost;
   final double serviceCost;
-  final String status; // 'paid', 'unpaid', 'overdue'
+  final String status; // 'paid', 'unpaid', 'overdue', 'pending'
   final DateTime dueDate;
   final DateTime? paidDate;
   final String? tenantId;
+  final DateTime createdAt;
 
   InvoiceModel({
     required this.id,
@@ -25,27 +26,47 @@ class InvoiceModel {
     required this.dueDate,
     this.paidDate,
     this.tenantId,
+    required this.createdAt,
   });
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
-    final room = json['roomId'];
-    final tenant = json['tenantId'];
+    // Helper to safely extract ID from nested objects
+    String _extractId(dynamic value) {
+      if (value == null) return '';
+      if (value is String) return value;
+      if (value is Map) return value['_id']?.toString() ?? value['id']?.toString() ?? '';
+      return value.toString();
+    }
+
+    // Extract room data - might be nested object or plain data
+    final roomId = json['roomId'];
+    String roomNumber = '';
+    if (roomId is Map) {
+      roomNumber = roomId['roomNumber']?.toString() ?? '';
+    } else if (json['roomNumber'] != null) {
+      roomNumber = json['roomNumber'].toString();
+    }
 
     return InvoiceModel(
-      id: json['id'] ?? json['_id'] ?? '',
-      roomNumber: json['roomNumber'] ?? room?['roomNumber'] ?? '',
-      month: json['month'] ?? json['periodMonth'] ?? '',
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      roomNumber: roomNumber,
+      month: json['periodMonth']?.toString() ?? json['month']?.toString() ?? '',
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
-      electricCost: (json['electricCost'] ?? json['electricityCost'] ?? 0).toDouble(),
-      waterCost: (json['waterCost'] ?? json['waterCost'] ?? 0).toDouble(),
-      roomCost: (json['roomCost'] ?? json['roomPrice'] ?? 0).toDouble(),
+      electricCost: (json['electricityCost'] ?? json['electricCost'] ?? 0).toDouble(),
+      waterCost: (json['waterCost'] ?? 0).toDouble(),
+      roomCost: (json['roomPrice'] ?? json['roomCost'] ?? 0).toDouble(),
       serviceCost: (json['serviceCost'] ?? 0).toDouble(),
-      status: json['status'] ?? 'unpaid',
-      dueDate: DateTime.parse(json['dueDate'] ?? DateTime.now().toIso8601String()),
-      paidDate: json['paidDate'] != null
-          ? DateTime.parse(json['paidDate'])
-          : (json['paidAt'] != null ? DateTime.parse(json['paidAt']) : null),
-      tenantId: json['tenantId'] ?? tenant?['_id'],
+      status: json['status']?.toString() ?? 'unpaid',
+      dueDate: json['dueDate'] != null
+          ? DateTime.parse(json['dueDate'].toString())
+          : DateTime.now(),
+      paidDate: (json['paidAt'] != null || json['paidDate'] != null)
+          ? DateTime.parse((json['paidAt'] ?? json['paidDate']).toString())
+          : null,
+      tenantId: _extractId(json['tenantId']),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'].toString())
+          : DateTime.now(),
     );
   }
 
@@ -63,6 +84,7 @@ class InvoiceModel {
       'dueDate': dueDate.toIso8601String(),
       'paidDate': paidDate?.toIso8601String(),
       'tenantId': tenantId,
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 
@@ -83,6 +105,7 @@ class InvoiceModel {
     DateTime? dueDate,
     DateTime? paidDate,
     String? tenantId,
+    DateTime? createdAt,
   }) {
     return InvoiceModel(
       id: id ?? this.id,
@@ -97,6 +120,7 @@ class InvoiceModel {
       dueDate: dueDate ?? this.dueDate,
       paidDate: paidDate ?? this.paidDate,
       tenantId: tenantId ?? this.tenantId,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

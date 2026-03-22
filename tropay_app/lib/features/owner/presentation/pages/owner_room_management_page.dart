@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/owner_provider.dart';
 import '../../data/models/room_model.dart';
 import '../../../../core/utils/format_utils.dart';
+import '../../../../routes/app_router.dart';
 
 class OwnerRoomManagementPage extends StatefulWidget {
   const OwnerRoomManagementPage({super.key});
@@ -14,6 +15,15 @@ class OwnerRoomManagementPage extends StatefulWidget {
 
 class _OwnerRoomManagementPageState extends State<OwnerRoomManagementPage> {
   String _selectedFilter = 'all';
+
+  @override
+  void initState() {
+    super.initState();
+    // Load rooms data when entering this page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OwnerProvider>().loadRooms();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -534,6 +544,50 @@ class _OwnerRoomManagementPageState extends State<OwnerRoomManagementPage> {
   }
 
   void _showAddRoomDialog(BuildContext context) {
+    final provider = context.read<OwnerProvider>();
+
+    // Check if building exists
+    if (provider.building == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Chưa thiết lập tòa nhà'),
+          content: const Text(
+            'Bạn cần thiết lập thông tin tòa nhà trước khi có thể thêm phòng. Hãy chọn "Thiết lập ngay" để bắt đầu.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                // Try to reload building data first
+                await provider.loadBuilding();
+                if (!context.mounted) return;
+
+                // Check again if building loaded successfully
+                if (provider.building == null) {
+                  // Still no building, go to setup
+                  Navigator.pushNamed(context, AppRouter.buildingSetup);
+                }
+              },
+              child: const Text('Thử tải lại'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRouter.buildingSetup);
+              },
+              child: const Text('Thiết lập ngay'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final numberController = TextEditingController();
     final areaController = TextEditingController();
     final priceController = TextEditingController();

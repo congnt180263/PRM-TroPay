@@ -1,9 +1,4 @@
-/// Building Constants
-///
-/// This file contains all constant values related to buildings,
-/// including types, amenities, validation rules, and utility prices.
-
-/// Represents an amenity option for buildings
+// Represents an amenity option for buildings
 class AmenityOption {
   final String value;
   final String label;
@@ -59,21 +54,6 @@ class BuildingConstants {
       value: 'laundry',
       label: 'Giặt là',
       icon: '👕',
-    ),
-    AmenityOption(
-      value: 'cctv',
-      label: 'Camera an ninh',
-      icon: '📹',
-    ),
-    AmenityOption(
-      value: 'generator',
-      label: 'Máy phát điện',
-      icon: '⚡',
-    ),
-    AmenityOption(
-      value: 'water_tank',
-      label: 'Bồn nước dự trữ',
-      icon: '💧',
     ),
   ];
 

@@ -191,12 +191,15 @@ class _OwnerInvoicesPageState extends State<OwnerInvoicesPage>
                             color: Colors.grey,
                           ),
                         ),
-                        Text(
-                          FormatUtils.formatCurrency(invoice.totalAmount),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            FormatUtils.formatCurrency(invoice.totalAmount),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
                       ],
@@ -276,7 +279,7 @@ class _OwnerInvoicesPageState extends State<OwnerInvoicesPage>
               const SizedBox(height: 16),
               _buildDetailRow('Phòng', invoice.roomNumber),
               const Divider(),
-              _buildDetailRow('Kỳ thanh toán', '${invoice.month}/${invoice.year}'),
+              _buildDetailRow('Kỳ thanh toán', invoice.month),
               const Divider(),
               _buildDetailRow(
                 'Ngày tạo',
@@ -328,9 +331,9 @@ class _OwnerInvoicesPageState extends State<OwnerInvoicesPage>
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      _buildAmountRow('Tiền phòng', invoice.roomPrice),
+                      _buildAmountRow('Tiền phòng', invoice.roomCost),
                       const SizedBox(height: 8),
-                      _buildAmountRow('Tiền điện', invoice.electricityCost),
+                      _buildAmountRow('Tiền điện', invoice.electricCost),
                       const SizedBox(height: 8),
                       _buildAmountRow('Tiền nước', invoice.waterCost),
                       const SizedBox(height: 8),
@@ -436,6 +439,7 @@ class _OwnerInvoicesPageState extends State<OwnerInvoicesPage>
 
   String _getStatusText(String status) {
     switch (status) {
+      case 'unpaid':
       case 'pending':
         return 'Chưa thanh toán';
       case 'paid':
@@ -449,6 +453,7 @@ class _OwnerInvoicesPageState extends State<OwnerInvoicesPage>
 
   Color _getStatusColor(String status) {
     switch (status) {
+      case 'unpaid':
       case 'pending':
         return Colors.orange;
       case 'paid':
@@ -462,6 +467,7 @@ class _OwnerInvoicesPageState extends State<OwnerInvoicesPage>
 
   IconData _getStatusIcon(String status) {
     switch (status) {
+      case 'unpaid':
       case 'pending':
         return Icons.schedule;
       case 'paid':

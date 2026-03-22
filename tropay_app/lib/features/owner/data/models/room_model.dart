@@ -36,26 +36,51 @@ class RoomModel {
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
-    final tenant = json['currentTenantId'] ?? {};
+    // Helper to safely extract tenant info from nested object or string
+    String? _extractTenantField(dynamic tenantData, String field) {
+      if (tenantData == null) return null;
+      if (tenantData is Map) {
+        return tenantData[field]?.toString();
+      }
+      // If tenantData is just an ID string, we can't extract other fields
+      return null;
+    }
+
+    // Handle currentTenantId - can be String (ID only) or Map (populated object)
+    String? tenantId = json['tenantId'];
+    String? tenantName;
+    String? tenantPhone;
+
+    final currentTenantData = json['currentTenantId'];
+    if (currentTenantData != null) {
+      if (currentTenantData is Map) {
+        tenantId = currentTenantData['_id']?.toString() ?? currentTenantData['id']?.toString();
+        tenantName = currentTenantData['fullName']?.toString();
+        tenantPhone = currentTenantData['phoneNumber']?.toString();
+      } else if (currentTenantData is String) {
+        // If it's just a string ID
+        tenantId = currentTenantData;
+      }
+    }
 
     return RoomModel(
-      id: json['id'] ?? json['_id'] ?? '',
-      buildingId: json['buildingId'] ?? '',
-      roomNumber: json['roomNumber'] ?? '',
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      buildingId: json['buildingId']?.toString() ?? '',
+      roomNumber: json['roomNumber']?.toString() ?? '',
       floor: json['floor'] ?? '',
       area: (json['area'] ?? 0).toDouble(),
       price: (json['price'] ?? 0).toDouble(),
       capacity: json['capacity'] ?? 1,
-      status: json['status'] ?? 'available',
-      tenantId: json['tenantId'] ?? tenant['_id'],
-      tenantName: json['tenantName'] ?? tenant['fullName'],
-      tenantPhone: json['tenantPhone'] ?? tenant['phoneNumber'],
+      status: json['status']?.toString() ?? 'available',
+      tenantId: tenantId ?? json['tenantName'],
+      tenantName: tenantName ?? json['tenantName'],
+      tenantPhone: tenantPhone ?? json['tenantPhone'],
       deposit: json['deposit'] != null ? (json['deposit'] as num).toDouble() : null,
       amenities: List<String>.from(json['amenities'] ?? []),
       description: json['description'],
       imageUrl: json['imageUrl'],
       lastMaintenanceDate: json['lastMaintenanceDate'] != null
-          ? DateTime.parse(json['lastMaintenanceDate'])
+          ? DateTime.parse(json['lastMaintenanceDate'].toString())
           : null,
     );
   }

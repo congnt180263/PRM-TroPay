@@ -17,14 +17,29 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TenantProvider()),
         ChangeNotifierProvider(create: (_) => OwnerProvider()),
       ],
-      child: MaterialApp(
-        title: 'TroPay',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        onGenerateRoute: AppRouter.onGenerateRoute,
-        initialRoute: AppRouter.login,
-        debugShowCheckedModeBanner: false,
+      child: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          // Determine initial route based on auth state
+          String initialRoute = AppRouter.login;
+
+          if (authProvider.isAuthenticated && authProvider.currentUser != null) {
+            if (authProvider.currentUser!.role == 'owner') {
+              initialRoute = AppRouter.ownerHome;
+            } else if (authProvider.currentUser!.role == 'tenant') {
+              initialRoute = AppRouter.tenantHome;
+            }
+          }
+
+          return MaterialApp(
+            title: 'TroPay',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.system,
+            onGenerateRoute: AppRouter.onGenerateRoute,
+            initialRoute: initialRoute,
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

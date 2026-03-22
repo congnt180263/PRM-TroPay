@@ -4,6 +4,7 @@ import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/custom_input_field.dart';
 import '../widgets/primary_button.dart';
+import '../../../../routes/app_router.dart';
 
 class RegisterPage extends StatefulWidget {
   final UserRole role;
@@ -53,12 +54,18 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!mounted) return;
 
     if (success) {
-      // Navigate to home based on user role
-      final role = authProvider.currentUser?.role ?? 'user';
+      final user = authProvider.currentUser;
+      final role = user?.role ?? 'user';
+
       if (role == 'owner' || role == 'admin') {
-        Navigator.pushReplacementNamed(context, '/owner-home');
+        // Owner mới -> building setup
+        Navigator.pushReplacementNamed(context, AppRouter.buildingSetup);
+      } else if (role == 'tenant') {
+        // Tenant -> tenant home
+        Navigator.pushReplacementNamed(context, AppRouter.tenantHome);
       } else {
-        Navigator.pushReplacementNamed(context, '/tenant-home');
+        // Other roles
+        Navigator.pushReplacementNamed(context, AppRouter.ownerHome);
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

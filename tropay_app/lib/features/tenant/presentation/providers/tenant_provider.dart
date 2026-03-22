@@ -127,10 +127,11 @@ class TenantProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      await _api.fetchServiceUsage();
+      final services = await _api.fetchServices();
+      _services = services;
+
       final history = await _api.fetchServiceHistory(limit: 50);
       _serviceHistory = history.items;
-      _services = [];
     } catch (e) {
       _services = [];
       _serviceHistory = [];
@@ -230,6 +231,16 @@ class TenantProvider with ChangeNotifier {
     } catch (e) {
       _invoicesError = e.toString();
       return false;
+    }
+  }
+
+  Future<void> markInvoiceAsPaid(String invoiceId) async {
+    try {
+      await _api.updateInvoiceStatus(invoiceId, 'paid');
+      await loadInvoices();
+    } catch (e) {
+      _invoicesError = e.toString();
+      rethrow;
     }
   }
 

@@ -1,7 +1,4 @@
-/// Building Form Data Model
-///
-/// This model is used for building creation and editing forms.
-/// It handles form state, validation, and submission preparation.
+// Building form state used for creation and editing flows.
 
 class BuildingFormData {
   String buildingName;
@@ -26,8 +23,9 @@ class BuildingFormData {
     this.street = '',
     this.ward = '',
     this.district = '',
-    this.city = 'Ho Chi Minh',
-    this.province = 'Ho Chi Minh',
+    // Use the exact province label from the dropdown list to avoid initial value mismatches.
+    this.city = 'Hồ Chí Minh',
+    this.province = 'Hồ Chí Minh',
     this.totalFloors = 1,
     this.buildingType = 'apartment',
     this.selectedAmenities = const [],

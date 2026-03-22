@@ -157,7 +157,7 @@ class ContractPage extends StatelessWidget {
                           _buildInfoRow(
                             context,
                             'Giá thuê',
-                            '\${FormatUtils.formatCurrency(contract.rentPrice)}/tháng',
+                            '${FormatUtils.formatCurrency(contract.rentPrice)}/tháng',
                             Icons.payments,
                             valueColor: Theme.of(context).colorScheme.primary,
                           ),

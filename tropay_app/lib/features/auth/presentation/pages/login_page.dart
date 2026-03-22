@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/custom_input_field.dart';
 import '../widgets/primary_button.dart';
+import '../../../owner/presentation/providers/owner_provider.dart';
+import '../../../../routes/app_router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -36,12 +38,41 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (success) {
-      // Navigate to home based on user role
-      final role = authProvider.currentUser?.role ?? 'user';
+      final user = authProvider.currentUser;
+      final role = user?.role ?? 'user';
+
       if (role == 'owner' || role == 'admin') {
-        Navigator.pushReplacementNamed(context, '/owner-home');
+        // Check if owner has building
+        final ownerProvider = Provider.of<OwnerProvider>(context, listen: false);
+        await ownerProvider.loadBuilding();
+
+        if (!mounted) return;
+
+        if (ownerProvider.hasBuilding) {
+          // Has building -> go to dashboard
+          Navigator.pushReplacementNamed(context, AppRouter.ownerHome);
+        } else if (ownerProvider.buildingError != null) {
+          // Network/server error during building check
+          // Show error and allow retry instead of redirecting to setup
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi tải dữ liệu tòa nhà: ${ownerProvider.buildingError}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+          // Still allow access to dashboard to retry or setup
+          Navigator.pushReplacementNamed(context, AppRouter.ownerHome);
+        } else {
+          // Confirmed: no building exists yet -> force setup
+          Navigator.pushReplacementNamed(context, AppRouter.buildingSetup);
+        }
+      } else if (role == 'tenant') {
+        Navigator.pushReplacementNamed(context, AppRouter.tenantHome);
       } else {
-        Navigator.pushReplacementNamed(context, '/tenant-home');
+        // Other roles
+        Navigator.pushReplacementNamed(context, AppRouter.ownerHome);
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

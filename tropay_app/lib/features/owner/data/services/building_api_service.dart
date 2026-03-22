@@ -27,11 +27,26 @@ class BuildingApiService {
   Future<BuildingModel?> getMyBuilding() async {
     try {
       final response = await _http.get(ApiConfig.myBuilding);
-      _ensureSuccess(response);
 
+      // Some backends return 200 with success=false when no building exists.
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>?;
+        final success = data?['success'] == true;
+        final payload = data?['data'] as Map<String, dynamic>?;
+
+        if (!success && (payload == null)) {
+          // Treat "no building" responses as null instead of throwing.
+          return null;
+        }
+
+        _ensureSuccess(response);
+        if (payload == null) return null;
+        return BuildingModel.fromJson(payload);
+      }
+
+      _ensureSuccess(response);
       final data = response.data['data'] as Map<String, dynamic>?;
       if (data == null) return null;
-
       return BuildingModel.fromJson(data);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
@@ -104,7 +119,12 @@ class BuildingApiService {
   /// Returns true if building exists, false otherwise
   /// Useful for determining if owner needs to create a building first
   Future<bool> hasBuilding() async {
-    final building = await getMyBuilding();
-    return building != null;
+    try {
+      final building = await getMyBuilding();
+      return building != null;
+    } catch (_) {
+      // On transient errors, assume no building to avoid blocking login loops.
+      return false;
+    }
   }
 }

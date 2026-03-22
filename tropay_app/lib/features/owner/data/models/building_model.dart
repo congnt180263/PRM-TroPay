@@ -1,11 +1,5 @@
-/// Building Model for TroPay Application
-///
-/// This file contains all models related to Building management including:
-/// - AddressModel: Building address information
-/// - ContactInfoModel: Contact details for the building
-/// - UtilitiesModel: Utility pricing information
-/// - BuildingModel: Main building entity
-/// - BuildingStatsModel: Building statistics and occupancy data
+// Building Model for TroPay Application
+// Contains address, contact, utilities, and building entities used across the app.
 
 /// Represents the complete address of a building
 class AddressModel {
@@ -152,17 +146,41 @@ class BuildingModel {
 
   /// Creates a BuildingModel from JSON data
   factory BuildingModel.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely convert to List<String>
+    List<String> _toStringList(dynamic value) {
+      if (value == null) return [];
+      if (value is List) {
+        return value
+            .map((e) => e is String ? e : (e is Map ? '' : e.toString()))
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
+      return [];
+    }
+
+    // Helper function to safely extract ID from ownerId
+    // Backend may return ownerId as String or as populated Object
+    String _extractOwnerId(dynamic ownerId) {
+      if (ownerId == null) return '';
+      if (ownerId is String) return ownerId;
+      if (ownerId is Map) {
+        // If ownerId is a populated User object, extract _id
+        return ownerId['_id']?.toString() ?? ownerId['id']?.toString() ?? '';
+      }
+      return ownerId.toString();
+    }
+
     return BuildingModel(
       id: json['id'] ?? json['_id'] ?? '',
-      ownerId: json['ownerId'] ?? '',
+      ownerId: _extractOwnerId(json['ownerId']),
       buildingName: json['buildingName'] ?? '',
       address: AddressModel.fromJson(json['address'] ?? {}),
       totalFloors: json['totalFloors'] ?? 0,
       totalRooms: json['totalRooms'] ?? 0,
       buildingType: json['buildingType'] ?? 'apartment',
-      commonAmenities: List<String>.from(json['commonAmenities'] ?? []),
+      commonAmenities: _toStringList(json['commonAmenities']),
       description: json['description'],
-      images: List<String>.from(json['images'] ?? []),
+      images: _toStringList(json['images']),
       contactInfo: ContactInfoModel.fromJson(json['contactInfo'] ?? {}),
       utilities: UtilitiesModel.fromJson(json['utilities'] ?? {}),
       isActive: json['isActive'] ?? true,

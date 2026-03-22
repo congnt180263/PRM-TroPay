@@ -5,6 +5,8 @@ import 'package:tropay_app/features/auth/presentation/pages/role_selection_page.
 import 'package:tropay_app/features/auth/data/models/user_model.dart';
 import 'package:tropay_app/features/home/presentation/pages/owner_home_page.dart';
 import 'package:tropay_app/features/home/presentation/pages/tenant_home_page.dart';
+import 'package:tropay_app/features/owner/presentation/pages/building_setup_page.dart';
+import 'package:tropay_app/features/owner/presentation/pages/building_edit_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -14,6 +16,10 @@ class AppRouter {
   static const String register = '/register';
   static const String ownerHome = '/owner-home';
   static const String tenantHome = '/tenant-home';
+
+  // Building routes
+  static const String buildingSetup = '/owner/building-setup';
+  static const String buildingEdit = '/owner/building-edit';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -27,6 +33,17 @@ class AppRouter {
         final UserRole role = settings.arguments as UserRole? ?? UserRole.tenant;
         return MaterialPageRoute(
           builder: (_) => RegisterPage(role: role),
+        );
+
+      case buildingSetup:
+        return MaterialPageRoute(
+          builder: (_) => const BuildingSetupPage(),
+          settings: settings,
+        );
+
+      case buildingEdit:
+        return MaterialPageRoute(
+          builder: (_) => const BuildingEditPage(),
         );
 
       case ownerHome:
