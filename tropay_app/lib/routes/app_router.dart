@@ -7,6 +7,7 @@ import 'package:tropay_app/features/home/presentation/pages/owner_home_page.dart
 import 'package:tropay_app/features/home/presentation/pages/tenant_home_page.dart';
 import 'package:tropay_app/features/owner/presentation/pages/building_setup_page.dart';
 import 'package:tropay_app/features/owner/presentation/pages/building_edit_page.dart';
+import 'package:tropay_app/features/tenant/presentation/pages/payment_result_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -20,6 +21,9 @@ class AppRouter {
   // Building routes
   static const String buildingSetup = '/owner/building-setup';
   static const String buildingEdit = '/owner/building-edit';
+
+  // Payment routes
+  static const String paymentResult = '/payment/result';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -51,6 +55,19 @@ class AppRouter {
 
       case tenantHome:
         return MaterialPageRoute(builder: (_) => const TenantHomePage());
+
+      case paymentResult:
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        return MaterialPageRoute(
+          builder: (_) => PaymentResultPage(
+            paymentId: args['paymentId'] as String? ?? '',
+            orderId: args['orderId'] as String?,
+            resultCode: args['resultCode'] as String?,
+            transId: args['transId'] as String?,
+            status: args['status'] as String?,
+            message: args['message'] as String?,
+          ),
+        );
 
       default:
         return MaterialPageRoute(

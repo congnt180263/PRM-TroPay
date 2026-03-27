@@ -147,7 +147,7 @@ class BuildingModel {
   /// Creates a BuildingModel from JSON data
   factory BuildingModel.fromJson(Map<String, dynamic> json) {
     // Helper function to safely convert to List<String>
-    List<String> _toStringList(dynamic value) {
+    List<String> toStringList(dynamic value) {
       if (value == null) return [];
       if (value is List) {
         return value
@@ -160,7 +160,7 @@ class BuildingModel {
 
     // Helper function to safely extract ID from ownerId
     // Backend may return ownerId as String or as populated Object
-    String _extractOwnerId(dynamic ownerId) {
+    String extractOwnerId(dynamic ownerId) {
       if (ownerId == null) return '';
       if (ownerId is String) return ownerId;
       if (ownerId is Map) {
@@ -172,15 +172,15 @@ class BuildingModel {
 
     return BuildingModel(
       id: json['id'] ?? json['_id'] ?? '',
-      ownerId: _extractOwnerId(json['ownerId']),
+      ownerId: extractOwnerId(json['ownerId']),
       buildingName: json['buildingName'] ?? '',
       address: AddressModel.fromJson(json['address'] ?? {}),
       totalFloors: json['totalFloors'] ?? 0,
       totalRooms: json['totalRooms'] ?? 0,
       buildingType: json['buildingType'] ?? 'apartment',
-      commonAmenities: _toStringList(json['commonAmenities']),
+      commonAmenities: toStringList(json['commonAmenities']),
       description: json['description'],
-      images: _toStringList(json['images']),
+      images: toStringList(json['images']),
       contactInfo: ContactInfoModel.fromJson(json['contactInfo'] ?? {}),
       utilities: UtilitiesModel.fromJson(json['utilities'] ?? {}),
       isActive: json['isActive'] ?? true,

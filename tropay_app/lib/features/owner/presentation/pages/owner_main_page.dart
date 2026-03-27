@@ -54,10 +54,7 @@ class _OwnerMainPageState extends State<OwnerMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
@@ -65,6 +62,7 @@ class _OwnerMainPageState extends State<OwnerMainPage> {
             _currentIndex = index;
           });
         },
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         destinations: _destinations,
         animationDuration: const Duration(milliseconds: 300),
         backgroundColor: Colors.white,

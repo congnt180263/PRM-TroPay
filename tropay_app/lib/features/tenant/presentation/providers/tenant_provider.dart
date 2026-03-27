@@ -234,6 +234,42 @@ class TenantProvider with ChangeNotifier {
     }
   }
 
+  /// Sync MoMo payment and get real paymentId from orderId
+  Future<String?> syncMomoPaymentStatus(String orderId) async {
+    try {
+      final result = await _api.syncMomoPayment(orderId);
+      return result['paymentId'] as String?;
+    } catch (e) {
+      _invoicesError = e.toString();
+      return null;
+    }
+  }
+
+  /// Manual update MoMo payment from app redirect (for local testing)
+  Future<Map<String, dynamic>> manualUpdateMomoPayment({
+    required String orderId,
+    required String resultCode,
+    String? transId,
+    String? message,
+  }) async {
+    try {
+      final result = await _api.manualUpdateMomoPayment(
+        orderId: orderId,
+        resultCode: resultCode,
+        transId: transId,
+        message: message,
+      );
+      // Reload invoices if payment was successful
+      if (result['status'] == 'success') {
+        await loadInvoices();
+      }
+      return result;
+    } catch (e) {
+      _invoicesError = e.toString();
+      rethrow;
+    }
+  }
+
   Future<void> markInvoiceAsPaid(String invoiceId) async {
     try {
       await _api.updateInvoiceStatus(invoiceId, 'paid');

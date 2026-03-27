@@ -6,7 +6,7 @@ class ApiConfig {
   // For local development: http://10.0.2.2:3000 (Android Emulator)
   // For iOS Simulator: http://localhost:3000
   // For physical device: http://YOUR_COMPUTER_IP:3000
-  static const String baseUrl = 'http://10.128.89.196:3000/api';
+  static const String baseUrl = 'http://192.168.77.100:3000/api';
 
   // ==================== Module: Auth ====================
   static const String auth = '$baseUrl/auth';

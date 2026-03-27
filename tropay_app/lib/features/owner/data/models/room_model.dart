@@ -37,7 +37,7 @@ class RoomModel {
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
     // Helper to safely extract tenant info from nested object or string
-    String? _extractTenantField(dynamic tenantData, String field) {
+    String? extractTenantField(dynamic tenantData, String field) {
       if (tenantData == null) return null;
       if (tenantData is Map) {
         return tenantData[field]?.toString();

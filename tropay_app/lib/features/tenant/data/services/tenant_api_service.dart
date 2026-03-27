@@ -176,6 +176,33 @@ class TenantApiService {
     return response.data['data'] as Map<String, dynamic>? ?? {};
   }
 
+  /// Sync MoMo payment status and get real paymentId from orderId
+  Future<Map<String, dynamic>> syncMomoPayment(String orderId) async {
+    final response = await _http.get('${ApiConfig.payments}/momo/sync/$orderId');
+    _ensureSuccess(response);
+    return response.data['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  /// Manual update MoMo payment after redirect (for local testing without IPN webhook)
+  Future<Map<String, dynamic>> manualUpdateMomoPayment({
+    required String orderId,
+    required String resultCode,
+    String? transId,
+    String? message,
+  }) async {
+    final response = await _http.post(
+      '${ApiConfig.payments}/momo/manual-update',
+      data: {
+        'orderId': orderId,
+        'resultCode': resultCode,
+        if (transId != null) 'transId': transId,
+        if (message != null) 'message': message,
+      },
+    );
+    _ensureSuccess(response);
+    return response.data['data'] as Map<String, dynamic>? ?? {};
+  }
+
   Future<void> updateInvoiceStatus(String invoiceId, String status) async {
     final response = await _http.patch(
       '${ApiConfig.tenant}/invoices/$invoiceId/status',

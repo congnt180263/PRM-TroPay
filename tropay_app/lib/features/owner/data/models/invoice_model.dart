@@ -31,7 +31,7 @@ class InvoiceModel {
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
     // Helper to safely extract ID from nested objects
-    String _extractId(dynamic value) {
+    String extractId(dynamic value) {
       if (value == null) return '';
       if (value is String) return value;
       if (value is Map) return value['_id']?.toString() ?? value['id']?.toString() ?? '';
@@ -63,7 +63,7 @@ class InvoiceModel {
       paidDate: (json['paidAt'] != null || json['paidDate'] != null)
           ? DateTime.parse((json['paidAt'] ?? json['paidDate']).toString())
           : null,
-      tenantId: _extractId(json['tenantId']),
+      tenantId: extractId(json['tenantId']),
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
